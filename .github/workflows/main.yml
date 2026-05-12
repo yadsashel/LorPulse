@@ -1,0 +1,21 @@
+name: LorPulse Daily Automation
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # كايخدم كل نهار مع 9:00 صباحاً (بتوقيت UTC)
+  workflow_dispatch: # هادي مهمة باش تقدر تلونصيه بيدك دابا للتجربة
+
+jobs:
+  run-automation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Hunter System (Scraping Leads)
+        run: |
+          curl -X GET "https://lorpulse.vercel.app/api/hunter"
+      
+      - name: Wait for Hunter to finish
+        run: sleep 30
+
+      - name: Trigger Outreach Engine (Sending Emails)
+        run: |
+          curl -X GET "https://lorpulse.vercel.app/api/outreach"
