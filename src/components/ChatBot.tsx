@@ -48,7 +48,7 @@ export default function ChatBot() {
       const plan = e.detail.planName;
       setSelectedPlan(plan);
       
-      const initialGreeting = `Welcome back to the LorPulse Neural Network. I see you've selected the **${plan}** infrastructure. 
+      const initialGreeting = `Welcome to the LorPulse Neural Network. I see you've selected the **${plan}** infrastructure. 
 
 To initialize deployment or recover an existing bridge, I need to align our parameters. 
 1. What is your organization's name?
