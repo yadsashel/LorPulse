@@ -1,14 +1,8 @@
 import { supabase } from "./supabaseClient";
 
 export const syncCustomNeural = async (email: string, key: string) => {
-  // هادي ديال Enterprise، الخدمة فيها كتكون Deep
-  await supabase.from('production_line').insert([{ 
-    client_name: "Enterprise Client",
-    client_email: email,
-    current_task: "Neural Architecture Design",
-    progress_percent: 10,
-    status: "Queued"
-  }]);
-  
-  // تقدر تزيد هنا أي API Integration logic مستقبلاً
+  const { error } = await supabase.from('custom_leads').insert([
+    { client_email: email, api_key: key, status: 'awaiting_integration' }
+  ]);
+  if (error) console.error("Custom Sync Fail:", error);
 };

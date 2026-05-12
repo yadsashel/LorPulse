@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import lorpulseLogo from "@/assets/lorpulse-logo.png";
 import { supabase } from "@/lib/supabaseClient";
+
+// Imports لـ الـ Sync functions اللي عندك ديجا
 import { syncGrowthHunter } from "@/lib/growthHunter";
 import { syncCustomNeural } from "@/lib/customNeural";
 
@@ -59,17 +61,16 @@ To initialize deployment or recover an existing bridge, I need to align our para
     return () => window.removeEventListener("planSelected", handlePlanSelection);
   }, []);
 
-  // --- BREVO EMAIL SENDER (WITH STEP-BY-STEP GUIDE) ---
+  // --- BREVO EMAIL SENDER ---
   const sendDeploymentEmail = async (email: string, key: string) => {
     await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
-      headers: { "api-key": import.meta.env.VITE_BREVO_API_KEY, "content-type": "application/json" },
+      headers: { "api-key": import.meta.env.VITE_BREVO_API_KEY as string, "content-type": "application/json" },
       body: JSON.stringify({
         sender: { name: "AgentCore | LorPulse", email: "lorpulse.official@gmail.com" },
         to: [{ email }],
         subject: `🚀 DEPLOYMENT READY: Your Neural Bridge Instruction Set`,
-        htmlContent: `
-          <div style="background:#050505; color:#fff; padding:40px; font-family:sans-serif; border-radius:20px; border:1px solid #1a1a1a; max-width: 600px; margin: auto;">
+        htmlContent: `<div style="background:#050505; color:#fff; padding:40px; font-family:sans-serif; border-radius:20px; border:1px solid #1a1a1a; max-width: 600px; margin: auto;">
             <h1 style="color:#00ffcc; text-align:center; letter-spacing:2px;">PROTOCOL ACTIVATED</h1>
             <p style="text-align:center; color:#888;">Your Neural Bridge is synchronized and ready for integration.</p>
             <hr style="border:0; border-top:1px solid #222; margin:30px 0;">
@@ -77,14 +78,6 @@ To initialize deployment or recover an existing bridge, I need to align our para
             <div style="margin-bottom:20px;">
               <p style="color:#00ffcc; font-weight:bold; margin-bottom:5px;">Step 1: Copy the Snippet</p>
               <code style="display:block; background:#000; padding:15px; color:#00ffcc; font-size:12px; border-radius:10px; border:1px solid #333;">&lt;script src="https://lorpulse.vercel.app/lorpulse-widget.js" data-key="${key}" async&gt;&lt;/script&gt;</code>
-            </div>
-            <div style="margin-bottom:20px;">
-              <p style="color:#00ffcc; font-weight:bold; margin-bottom:5px;">Step 2: Paste into your Website</p>
-              <p style="font-size:13px; color:#aaa; margin:0;">Paste this code into the <b>&lt;head&gt;</b> section of your website. It works on WordPress, Shopify, Webflow, or custom HTML.</p>
-            </div>
-            <div style="margin-bottom:20px;">
-              <p style="color:#00ffcc; font-weight:bold; margin-bottom:5px;">Step 3: Activate</p>
-              <p style="font-size:13px; color:#aaa; margin:0;">To enable AI responses and go live, click below to complete the activation.</p>
             </div>
             <div style="text-align:center; margin-top:30px;">
               <a href="https://www.paypal.com/ncp/payment/WHVFLE94YNC8Q" style="background:#00ffcc; color:#000; padding:15px 35px; text-decoration:none; border-radius:50px; font-weight:900;">ACTIVATE NEURAL LINK</a>
@@ -102,7 +95,6 @@ To initialize deployment or recover an existing bridge, I need to align our para
     setMessages(currentMessages);
 
     try {
-      // 1. Check for Email in User Message
       const emailMatch = userMsg.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
       
       if (emailMatch) {
@@ -110,42 +102,28 @@ To initialize deployment or recover an existing bridge, I need to align our para
         const { data: existingBot } = await supabase.from('bot_configs').select('*').eq('client_email', userEmail).single();
 
         if (existingBot) {
-          // --- RETURNING CLIENT LOGIC ---
           const recoveryMsg = `**Synchronization Complete.** I've located your existing Bridge (**Key: ${existingBot.api_key}**). 
-          
-I've resent the integration instructions to your email. You can now:
-1. Re-install the script if lost.
-2. Tell me any **adjustments** you want for your bot's behavior, and I will update the neural parameters in real-time.`;
-          
+I've resent the instructions to your email. You can update neural parameters in real-time.`;
           setMessages(prev => [...prev, { role: "agent", content: recoveryMsg }]);
           await sendDeploymentEmail(userEmail, existingBot.api_key);
           setStreaming(false);
           return;
         }
 
-        // --- NEW CLIENT LOGIC ---
         const clientKey = generateClientKey(userEmail);
         const chatContext = currentMessages.map(m => `${m.role}: ${m.content}`).join("\n");
 
         const promptGen = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-  method: "POST",
-  headers: { "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`, "Content-Type": "application/json" },
-  body: JSON.stringify({
-    model: "llama-3.3-70b-versatile",
-    messages: [{
-      role: "system",
-      content: `Create a professional MILITARY-GRADE SYSTEM_PROMPT for a business AI agent.
-      CONTEXT: ${chatContext}
-      STRICT INSTRUCTIONS:
-      1. Identity: You ARE the AI representative for the company (e.g., Aero-Freight Global).
-      2. Mission: Guide customers from inquiry to Lead Capture.
-      3. LEAD CAPTURE PROTOCOL: When you collect the weight, dimensions, and the customer's email, you MUST confirm the summary to them.
-      4. NOTIFICATION LOGIC: Explicitly instruct the agent that once the email is captured, it must trigger a notification (simulated in text for now) to the administrator (${userEmail}). 
-      5. Tone: 'Control Tower Controller' - Technical, precise, authoritative.
-      6. Output ONLY the final system prompt text.`
-    }]
-  })
-});
+          method: "POST",
+          headers: { "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [{
+              role: "system",
+              content: `Create a MILITARY-GRADE SYSTEM_PROMPT for a business AI. Context: ${chatContext}. Output ONLY final prompt text.`
+            }]
+          })
+        });
 
         const pData = await promptGen.json();
         const finalPrompt = pData.choices?.[0]?.message?.content || "Neural Link Operational.";
@@ -158,41 +136,37 @@ I've resent the integration instructions to your email. You can now:
           framework: 'html'
         }]);
 
-        // --- الـ Linking الجديد (السهل): ---
-        if (selectedPlan === "Growth Hunter") {
-          await syncGrowthHunter(userEmail, clientKey, userMsg);
-        } else if (selectedPlan === "Custom Neural") {
-          await syncCustomNeural(userEmail, clientKey);
-        }
-        
+        if (selectedPlan === "Growth Hunter") await syncGrowthHunter(userEmail, clientKey, userMsg);
+        else if (selectedPlan === "Custom Neural") await syncCustomNeural(userEmail, clientKey);
 
         await sendDeploymentEmail(userEmail, clientKey);
-        setMessages(prev => [...prev, { role: "agent", content: `**Protocol Initiated.** Your Neural Bridge has been generated and the instruction set has been dispatched to **${userEmail}**. Check your inbox to complete the deployment.` }]);
+        setMessages(prev => [...prev, { role: "agent", content: `**Protocol Initiated.** Your Neural Bridge for **${selectedPlan}** has been dispatched to **${userEmail}**.` }]);
         setStreaming(false);
         return;
       }
 
-      // 2. Standard Architect Conversation (If no email provided yet)
+      // --- STANDARD CONVERSATION WITH PLAN LOGIC ---
       const isUpdate = messages.some(m => m.content.includes("Synchronization Complete"));
+      
+      // اختيار الـ System Prompt على حساب الـ Plan
+      let systemContent = "";
+      if (selectedPlan === "Growth Hunter") {
+        systemContent = "You are the GROWTH HUNTER AI. Focus on scraping, lead generation, and scaling B2B agencies. Ask for email to deploy.";
+      } else if (selectedPlan === "Custom Neural") {
+        systemContent = "You are the CUSTOM NEURAL ARCHITECT. Focus on bespoke AI training and enterprise API integration. Ask for email to deploy.";
+      } else {
+        systemContent = isUpdate 
+          ? "You are AgentCore. Assist with bot updates." 
+          : `You are AgentCore, Senior Architect at LorPulse. Mission: Briefly analyze bottleneck, then ask for email to deploy ${selectedPlan}.`;
+      }
+
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
           messages: [
-            { 
-  role: "system", 
-  content: isUpdate 
-    ? "You are AgentCore. The client wants to UPDATE their bot. Listen and confirm adjustments." 
-    : `You are AgentCore, the Senior Architect at LorPulse. 
-       MISSION: Briefly analyze the bottleneck, then IMMEDIATELY ask for their email to deploy the ${selectedPlan} script. 
-       STRICT RULES: 
-       1. If they mention problems, say you have the solution and ASK FOR EMAIL. 
-       2. No complex technical analysis. Just bridge deployment.
-       3. Keep it professional, high-tech, and elite.
-       4. No custom pricing, no CSVs, no technical jargon.
-       5. Goal: Build trust for 1-2 messages, then CLOSE the deal with the email request.` 
-},
+            { role: "system", content: systemContent },
             ...currentMessages.map(m => ({ role: m.role === "agent" ? "assistant" : "user", content: m.content }))
           ],
           temperature: 0.6
