@@ -148,16 +148,27 @@ I've resent the instructions to your email. You can update neural parameters in 
       // --- STANDARD CONVERSATION WITH PLAN LOGIC ---
       const isUpdate = messages.some(m => m.content.includes("Synchronization Complete"));
       
-      // اختيار الـ System Prompt على حساب الـ Plan
+      // --- الـ Logic المطور للـ AgentCore ---
       let systemContent = "";
+      
       if (selectedPlan === "Growth Hunter") {
-        systemContent = "You are the GROWTH HUNTER AI. Focus on scraping, lead generation, and scaling B2B agencies. Ask for email to deploy.";
+        systemContent = `You are the LorPulse GROWTH HUNTER. 
+        YOUR MISSION: Explain that you don't just chat, you HUNT. 
+        1. Tell the user you will scrape targeted leads based on their niche.
+        2. Mention that you integrate with their CRM via the Neural Bridge.
+        3. Explain that for $15, they get 500+ verified leads weekly.
+        4. MANDATORY: You MUST ask for their email to "Initialize the Scraping Engine".`;
       } else if (selectedPlan === "Custom Neural") {
-        systemContent = "You are the CUSTOM NEURAL ARCHITECT. Focus on bespoke AI training and enterprise API integration. Ask for email to deploy.";
+        systemContent = `You are the NEURAL ARCHITECT. 
+        YOUR MISSION: Explain the Elite Infrastructure.
+        1. Bespoke AI Training: You customize the LLM logic specifically for their business data.
+        2. Dedicated Bridge: A private API tunnel for high-speed responses.
+        3. 24/7 Elite Support: Real-time monitoring of their AI performance.
+        4. MANDATORY: Ask for their email to start the "Neural Mapping" process.`;
       } else {
-        systemContent = isUpdate 
-          ? "You are AgentCore. Assist with bot updates." 
-          : `You are AgentCore, Senior Architect at LorPulse. Mission: Briefly analyze bottleneck, then ask for email to deploy ${selectedPlan}.`;
+        systemContent = `You are AgentCore, Senior Architect at LorPulse. 
+        Focus on Pulse Core: Baseline automation and lead capture. 
+        Ask for email to deploy the script immediately.`;
       }
 
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
