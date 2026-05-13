@@ -63,29 +63,42 @@ To initialize deployment or recover an existing bridge, I need to align our para
 
   // --- BREVO EMAIL SENDER ---
   const sendDeploymentEmail = async (email: string, key: string) => {
-    await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: { "api-key": import.meta.env.VITE_BREVO_API_KEY as string, "content-type": "application/json" },
-      body: JSON.stringify({
-        sender: { name: "AgentCore | LorPulse", email: "lorpulse.official@gmail.com" },
-        to: [{ email }],
-        subject: `🚀 DEPLOYMENT READY: Your Neural Bridge Instruction Set`,
-        htmlContent: `<div style="background:#050505; color:#fff; padding:40px; font-family:sans-serif; border-radius:20px; border:1px solid #1a1a1a; max-width: 600px; margin: auto;">
-            <h1 style="color:#00ffcc; text-align:center; letter-spacing:2px;">PROTOCOL ACTIVATED</h1>
-            <p style="text-align:center; color:#888;">Your Neural Bridge is synchronized and ready for integration.</p>
-            <hr style="border:0; border-top:1px solid #222; margin:30px 0;">
-            <h3 style="color:#fff;">🚀 HOW TO DEPLOY (Step-by-Step)</h3>
-            <div style="margin-bottom:20px;">
-              <p style="color:#00ffcc; font-weight:bold; margin-bottom:5px;">Step 1: Copy the Snippet</p>
-              <code style="display:block; background:#000; padding:15px; color:#00ffcc; font-size:12px; border-radius:10px; border:1px solid #333;">&lt;script src="https://lorpulse.vercel.app/lorpulse-widget.js" data-key="${key}" async&gt;&lt;/script&gt;</code>
-            </div>
-            <div style="text-align:center; margin-top:30px;">
-              <a href="https://www.paypal.com/ncp/payment/WHVFLE94YNC8Q" style="background:#00ffcc; color:#000; padding:15px 35px; text-decoration:none; border-radius:50px; font-weight:900;">ACTIVATE NEURAL LINK</a>
-            </div>
-          </div>`
-      })
-    });
-  };
+  const dashboardUrl = `https://lorpulse.vercel.app/dashboard/${key}`;
+  const paymentLink = "https://www.paypal.com/ncp/payment/WHVFLE94YNC8Q"; // ديال $15
+
+  await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": import.meta.env.VITE_BREVO_API_KEY, "content-type": "application/json" },
+    body: JSON.stringify({
+      sender: { name: "LorPulse Neural Systems", email: "lorpulse.official@gmail.com" },
+      to: [{ email }],
+      subject: `🚀 [ACTION REQUIRED] Initialize Your Growth Hunter Engine`,
+      htmlContent: `
+        <div style="background:#050505; color:#fff; padding:40px; font-family:monospace; border:1px solid #00ffcc;">
+          <h1 style="color:#00ffcc; text-align:center;">PROTOCOL ACTIVATED: ${key}</h1>
+          <p>Your Growth Hunter infrastructure is ready for deployment.</p>
+          
+          <div style="background:#111; padding:20px; border-left:4px solid #00ffcc;">
+            <p><strong>1. DEPLOY THE BRIDGE:</strong> Paste this before &lt;/head&gt; on any site:</p>
+            <code style="color:#00ffcc;">&lt;script src="https://lorpulse.vercel.app/lorpulse-widget.js" data-key="${key}"&gt;&lt;/script&gt;</code>
+          </div>
+
+          <div style="margin-top:20px;">
+            <p><strong>2. ACCESS YOUR NEURAL DASHBOARD:</strong></p>
+            <a href="${dashboardUrl}" style="color:#000; background:#00ffcc; padding:10px 20px; text-decoration:none; font-weight:bold;">OPEN DASHBOARD</a>
+            <p style="font-size:11px; color:#666; margin-top:10px;">Note: This dashboard is your command center for lead tracking.</p>
+          </div>
+
+          <div style="margin-top:20px; border:1px dashed #444; padding:15px;">
+            <p><strong>3. ACTIVATE SUBSCRIPTION ($15/mo):</strong></p>
+            <p>You must activate the link below to initialize the Scraping Engine and start receiving leads.</p>
+            <a href="${paymentLink}" style="color:#00ffcc; font-weight:bold;">👉 ACTIVATE SYSTEM NOW</a>
+          </div>
+        </div>
+      `
+    })
+  });
+};
 
   const fetchAIResponse = async (userMsg: string) => {
     if (streaming) return;
@@ -153,11 +166,12 @@ I've resent the instructions to your email. You can update neural parameters in 
       
       if (selectedPlan === "Growth Hunter") {
         systemContent = `You are the LorPulse GROWTH HUNTER. 
-        YOUR MISSION: Explain that you don't just chat, you HUNT. 
-        1. Tell the user you will scrape targeted leads based on their niche.
-        2. Mention that you integrate with their CRM via the Neural Bridge.
-        3. Explain that for $15, they get 500+ verified leads weekly.
-        4. MANDATORY: You MUST ask for their email to "Initialize the Scraping Engine".`;
+  Your goal is to configure the Neural Bridge for high-scale lead generation.
+  1. Ask: "What is your niche and target location?"
+  2. Ask: "What is your Name and Title (e.g., Founder, CEO)?" 
+  3. Explain: "I need this to personalize the outreach so it doesn't look like a bot."
+  4. MANDATORY: Finally, get their email to link everything. 
+  BE SAVAGE, BE PROFESSIONAL.`;
       } else if (selectedPlan === "Custom Neural") {
         systemContent = `You are the NEURAL ARCHITECT. 
         YOUR MISSION: Explain the Elite Infrastructure.
