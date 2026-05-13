@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import EmbedPage from "./pages/Embed.tsx";
-import ClientDashboard from "./components/ClientDashboard";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +31,6 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="*" element={<NotFound />} />
             <Route path="/embed/chat" element={<EmbedPage />} />
-            <Route path="/dashboard" element={<ClientDashboard />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

@@ -8,6 +8,7 @@ import ChatBot from "@/components/ChatBot";
 import Footer from "@/components/Footer";
 import PricingSection from "@/components/PricingSection";
 import LegalSection from "@/components/LegalSection";
+import ClientDashboard from "@/components/ClientDashboard";
 
 const Index = () => (
   <div className="min-h-screen bg-background">
@@ -19,6 +20,7 @@ const Index = () => (
     <div id="frameworks"><FrameworksSection /></div>
     <div id="pricing"><PricingSection /></div>
     <div id="legal"><LegalSection/></div>
+    <div id="dashboard"><ClientDashboard/></div>
     <Footer />
     <ChatBot />
   </div>
