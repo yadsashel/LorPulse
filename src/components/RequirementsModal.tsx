@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 interface RequirementsModalProps {
@@ -17,8 +17,29 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState<"details" | "payment">("details");
+  
+  // 🔐 الساروت السري للأدمن (مخفي تماماً على العموم)
+  const [isOwnerMode, setIsOwnerMode] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
 
   const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+
+  // تشفير التحقق من الأدمن ف المتصفح ديالك بوحدك
+  useEffect(() => {
+    if (localStorage.getItem("lorpulse_owner_access") === "true") {
+      setIsOwnerMode(true);
+    }
+  }, []);
+
+  const handleSecretClick = () => {
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+    if (newCount >= 5) {
+      localStorage.setItem("lorpulse_owner_access", "true");
+      setIsOwnerMode(true);
+      alert("⚡ Owner Mode Activated Successfully. Unlimited Free Access Enabled.");
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -31,6 +52,32 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
       updatedForm.city.trim() !== "" &&
       updatedForm.subjectLine.trim() !== "";
     setIsFormValid(valid);
+  };
+
+  const triggerOwnerBypass = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan_type: "core",
+          niche: formData.niche,
+          city: formData.city,
+          email: formData.email,
+          email_subject_line: formData.subjectLine,
+          paypal_order_id: `OWNER_UNLIMITED_HUNT_${Date.now()}`
+        })
+      });
+
+      if (response.ok) {
+        setSuccess(true);
+      }
+    } catch (error) {
+      console.error("Owner pipeline execution failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (plan === "horizon") {
@@ -50,7 +97,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      {/* كبرنا الـ max-w لـ 4xl باش الـ ديسكطوب يـاخد اتساع خيالي */}
       <div className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[95vh] ${step === "payment" ? "max-w-4xl" : "max-w-md"}`}>
         
         <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10">✕</button>
@@ -61,7 +107,12 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
               /* ================= STEP 1: FORM DETAILS ================= */
               <div className="animate-fadeIn">
                 <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">Onboarding Setup</div>
-                <h3 className="font-display text-2xl font-semibold text-white tracking-tight">Configure Your Pipeline</h3>
+                
+                {/* العنوان اللي غاتكليكي عليه 5 المرات باش تفعل خطتك الفابور للأبد */}
+                <h3 onClick={handleSecretClick} className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none">
+                  Configure Your Pipeline {isOwnerMode && <span className="text-emerald-400 text-xs ml-1">● Owner</span>}
+                </h3>
+                
                 <p className="text-xs text-zinc-400 mt-1 mb-6">Pulse Core Plan — One-time activation fee of $14.</p>
 
                 <div className="space-y-4">
@@ -84,17 +135,23 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
                   <button
                     disabled={!isFormValid}
-                    onClick={() => setStep("payment")}
+                    onClick={() => {
+                      if (isOwnerMode) {
+                        triggerOwnerBypass(); // كيمشي نيشان للـ Backend فابور
+                      } else {
+                        setStep("payment"); // كيدير الكليان العادي لـ PayPal
+                      }
+                    }}
                     className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${isFormValid ? "bg-white text-black hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5" : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"}`}
                   >
-                    Proceed to Secure Checkout
+                    {isOwnerMode ? "Execute Free Owner Extraction ⚡" : "Proceed to Secure Checkout"}
                   </button>
                 </div>
               </div>
             ) : (
               /* ================= STEP 2: STRIPE-STYLE ULTRA WIDE GRID ================= */
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
-                {/* Left Side: Summary (عطيناها 4 د السواري فقط باش نخليو الاتساع للـ لخرين) */}
+                {/* Left Side: Summary */}
                 <div className="md:col-span-4 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
                     <button onClick={() => setStep("details")} className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors">
@@ -115,21 +172,15 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                   </div>
                 </div>
 
-                {/* Right Side: Embedded Payment Layer (عطيناها 8 د السواري - قمة الاتساع) */}
+                {/* Right Side: Embedded Payment Layer */}
                 <div className="md:col-span-8 flex flex-col justify-start w-full min-h-[400px]">
                   <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4 px-1">Select Payment Method</h4>
                   
-                  {/* هنا حيدنا الـ padding وخلينا العرض كامل w-full و overflow-visible باش الـ iframe ياخد راحتو */}
                   <div className="w-full block overflow-visible px-1">
                     {paypalClientId ? (
                       <PayPalScriptProvider options={{ "client-id": paypalClientId, components: "buttons" }}>
                         <PayPalButtons
-                          style={{ 
-                            layout: "vertical", 
-                            color: "black", 
-                            shape: "rect", 
-                            label: "pay" 
-                          }}
+                          style={{ layout: "vertical", color: "black", shape: "rect", label: "pay" }}
                           createOrder={(_, actions) => {
                             return actions.order.create({
                               purchase_units: [{
