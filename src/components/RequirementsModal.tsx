@@ -16,7 +16,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [step, setStep] = useState<"details" | "payment">("details"); // لتتبع الخطوات مثل Stripe
+  const [step, setStep] = useState<"details" | "payment">("details");
 
   const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
@@ -50,15 +50,15 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      {/* Dynamic size: gets wider on payment step to look like Stripe Checkout split-screen */}
-      <div className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[90vh] ${step === "payment" ? "max-w-2xl" : "max-w-md"}`}>
+      {/* كبرنا الـ max-w لـ 3xl ف الدفع باش يـاخد الفورم راحتو كاملة */}
+      <div className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[95vh] ${step === "payment" ? "max-w-3xl" : "max-w-md"}`}>
         
         <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10">✕</button>
 
         {!success ? (
           <>
             {step === "details" ? (
-              /* ================= STEP 1: PREMIUM STRIPE FORM ================= */
+              /* ================= STEP 1: FORM DETAILS ================= */
               <div className="animate-fadeIn">
                 <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">Onboarding Setup</div>
                 <h3 className="font-display text-2xl font-semibold text-white tracking-tight">Configure Your Pipeline</h3>
@@ -92,10 +92,10 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                 </div>
               </div>
             ) : (
-              /* ================= STEP 2: STRIPE-STYLE SPLIT CHECKOUT ================= */
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-slideIn">
-                {/* Left Side: Order Summary */}
-                <div className="border-b md:border-b-0 md:border-r border-zinc-800 pb-6 md:pb-0 md:pr-8 flex flex-col justify-between">
+              /* ================= STEP 2: STRIPE-STYLE PREMIUM GRID ================= */
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
+                {/* Left Side: Summary (4 Columns) */}
+                <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
                     <button onClick={() => setStep("details")} className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors">
                       ← Edit info
@@ -103,69 +103,77 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                     <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">Pay LorPulse</div>
                     <h4 className="text-3xl font-bold text-white tracking-tight">$14.00</h4>
                     
-                    <div className="mt-6 space-y-3 bg-zinc-900/50 border border-zinc-900 p-4 rounded-xl text-xs">
+                    <div className="mt-6 space-y-3 bg-zinc-900/40 border border-zinc-900 p-4 rounded-xl text-xs">
                       <div className="flex justify-between"><span className="text-zinc-500">Pipeline:</span> <span className="text-zinc-300 font-medium">Pulse Core</span></div>
-                      <div className="flex justify-between"><span className="text-zinc-500">Niche:</span> <span className="text-zinc-300 truncate max-w-[150px] font-medium">{formData.niche}</span></div>
+                      <div className="flex justify-between"><span className="text-zinc-500">Niche:</span> <span className="text-zinc-300 truncate max-w-[120px] font-medium">{formData.niche}</span></div>
                       <div className="flex justify-between"><span className="text-zinc-500">Target:</span> <span className="text-zinc-300 font-medium">{formData.city}</span></div>
-                      <div className="flex justify-between"><span className="text-zinc-500">Delivery:</span> <span className="text-zinc-300 truncate max-w-[150px] font-medium">{formData.email}</span></div>
+                      <div className="flex justify-between"><span className="text-zinc-500">Delivery:</span> <span className="text-zinc-300 truncate max-w-[120px] font-medium">{formData.email}</span></div>
                     </div>
                   </div>
-                  <div className="text-[10px] text-zinc-600 mt-6">
+                  <div className="text-[10px] text-zinc-600 mt-6 hidden md:block">
                     Secured by PayPal encryption layer. Authorized B2B lead generation node execution.
                   </div>
                 </div>
 
-                {/* Right Side: Embedded Premium Button Window */}
-                <div className="flex flex-col justify-center">
-                  <h4 className="text-sm font-medium text-white mb-4">Select Payment Method</h4>
-                  {paypalClientId ? (
-                    <PayPalScriptProvider options={{ "client-id": paypalClientId }}>
-                      <PayPalButtons
-                        // الستيل الأسود الفخم بحال Stripe تماما
-                        style={{ layout: "vertical", color: "black", shape: "rect", label: "pay" }}
-                        createOrder={(_, actions) => {
-                          return actions.order.create({
-                            purchase_units: [{
-                              amount: { value: "14.00" },
-                              description: `LorPulse Core: 5,000 ${formData.niche} Leads`
-                            }]
-                          });
-                        }}
-                        onApprove={async (_, actions) => {
-                          if (!actions.order) return;
-                          setLoading(true);
-                          const details = await actions.order.capture();
-
-                          try {
-                            const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                plan_type: "core",
-                                niche: formData.niche,
-                                city: formData.city,
-                                email: formData.email,
-                                email_subject_line: formData.subjectLine,
-                                paypal_order_id: details.id
-                              })
+                {/* Right Side: Embedded Perfect Payment Layer (7 Columns) */}
+                <div className="md:col-span-7 flex flex-col justify-start w-full min-h-[350px]">
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4">Select Payment Method</h4>
+                  
+                  {/* هاد الـ div هو اللي غايـسرح الـ Credit Card fields باش يـجيو fit وعراض */}
+                  <div className="w-full text-white tracking-normal clear-both block opacity-100">
+                    {paypalClientId ? (
+                      <PayPalScriptProvider options={{ "client-id": paypalClientId, components: "buttons" }}>
+                        <PayPalButtons
+                          style={{ 
+                            layout: "vertical", 
+                            color: "black", // اللون الأسود الفخم ديال Stripe
+                            shape: "rect", 
+                            label: "pay" 
+                          }}
+                          createOrder={(_, actions) => {
+                            return actions.order.create({
+                              purchase_units: [{
+                                amount: { value: "14.00" },
+                                description: `LorPulse Core: 5,000 ${formData.niche} Leads`
+                              }]
                             });
+                          }}
+                          onApprove={async (_, actions) => {
+                            if (!actions.order) return;
+                            setLoading(true);
+                            const details = await actions.order.capture();
 
-                            if (response.ok) {
-                              setSuccess(true);
+                            try {
+                              const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  plan_type: "core",
+                                  niche: formData.niche,
+                                  city: formData.city,
+                                  email: formData.email,
+                                  email_subject_line: formData.subjectLine,
+                                  paypal_order_id: details.id
+                                })
+                              });
+
+                              if (response.ok) {
+                                setSuccess(true);
+                              }
+                            } catch (error) {
+                              console.error("Failed to securely deploy pipeline boundaries:", error);
+                            } finally {
+                              setLoading(false);
                             }
-                          } catch (error) {
-                            console.error("Failed to securely deploy pipeline boundaries:", error);
-                          } finally {
-                            setLoading(false);
-                          }
-                        }}
-                      />
-                    </PayPalScriptProvider>
-                  ) : (
-                    <div className="text-xs text-red-400 bg-red-500/5 p-3 border border-red-500/10 rounded-xl">
-                      Failed to load secure API layer. Please refresh.
-                    </div>
-                  )}
+                          }}
+                        />
+                      </PayPalScriptProvider>
+                    ) : (
+                      <div className="text-xs text-red-400 bg-red-500/5 p-3 border border-red-500/10 rounded-xl">
+                        Failed to load secure API layer. Please refresh.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
