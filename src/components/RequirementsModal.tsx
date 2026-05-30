@@ -50,8 +50,8 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      {/* كبرنا الـ max-w لـ 3xl ف الدفع باش يـاخد الفورم راحتو كاملة */}
-      <div className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[95vh] ${step === "payment" ? "max-w-3xl" : "max-w-md"}`}>
+      {/* كبرنا الـ max-w لـ 4xl باش الـ ديسكطوب يـاخد اتساع خيالي */}
+      <div className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[95vh] ${step === "payment" ? "max-w-4xl" : "max-w-md"}`}>
         
         <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10">✕</button>
 
@@ -92,10 +92,10 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                 </div>
               </div>
             ) : (
-              /* ================= STEP 2: STRIPE-STYLE PREMIUM GRID ================= */
+              /* ================= STEP 2: STRIPE-STYLE ULTRA WIDE GRID ================= */
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
-                {/* Left Side: Summary (4 Columns) */}
-                <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
+                {/* Left Side: Summary (عطيناها 4 د السواري فقط باش نخليو الاتساع للـ لخرين) */}
+                <div className="md:col-span-4 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
                     <button onClick={() => setStep("details")} className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors">
                       ← Edit info
@@ -105,9 +105,9 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                     
                     <div className="mt-6 space-y-3 bg-zinc-900/40 border border-zinc-900 p-4 rounded-xl text-xs">
                       <div className="flex justify-between"><span className="text-zinc-500">Pipeline:</span> <span className="text-zinc-300 font-medium">Pulse Core</span></div>
-                      <div className="flex justify-between"><span className="text-zinc-500">Niche:</span> <span className="text-zinc-300 truncate max-w-[120px] font-medium">{formData.niche}</span></div>
+                      <div className="flex justify-between"><span className="text-zinc-500">Niche:</span> <span className="text-zinc-300 truncate max-w-[100px] font-medium">{formData.niche}</span></div>
                       <div className="flex justify-between"><span className="text-zinc-500">Target:</span> <span className="text-zinc-300 font-medium">{formData.city}</span></div>
-                      <div className="flex justify-between"><span className="text-zinc-500">Delivery:</span> <span className="text-zinc-300 truncate max-w-[120px] font-medium">{formData.email}</span></div>
+                      <div className="flex justify-between"><span className="text-zinc-500">Delivery:</span> <span className="text-zinc-300 truncate max-w-[100px] font-medium">{formData.email}</span></div>
                     </div>
                   </div>
                   <div className="text-[10px] text-zinc-600 mt-6 hidden md:block">
@@ -115,18 +115,18 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                   </div>
                 </div>
 
-                {/* Right Side: Embedded Perfect Payment Layer (7 Columns) */}
-                <div className="md:col-span-7 flex flex-col justify-start w-full min-h-[350px]">
-                  <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4">Select Payment Method</h4>
+                {/* Right Side: Embedded Payment Layer (عطيناها 8 د السواري - قمة الاتساع) */}
+                <div className="md:col-span-8 flex flex-col justify-start w-full min-h-[400px]">
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4 px-1">Select Payment Method</h4>
                   
-                  {/* هاد الـ div هو اللي غايـسرح الـ Credit Card fields باش يـجيو fit وعراض */}
-                  <div className="w-full text-white tracking-normal clear-both block opacity-100">
+                  {/* هنا حيدنا الـ padding وخلينا العرض كامل w-full و overflow-visible باش الـ iframe ياخد راحتو */}
+                  <div className="w-full block overflow-visible px-1">
                     {paypalClientId ? (
                       <PayPalScriptProvider options={{ "client-id": paypalClientId, components: "buttons" }}>
                         <PayPalButtons
                           style={{ 
                             layout: "vertical", 
-                            color: "black", // اللون الأسود الفخم ديال Stripe
+                            color: "black", 
                             shape: "rect", 
                             label: "pay" 
                           }}
