@@ -12,7 +12,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     niche: "",
     city: "",
     subjectLine: "",
-    accessCode: "", 
   });
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,8 +19,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [step, setStep] = useState<"details" | "payment">("details");
 
   const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
-  
-  const ADMIN_SECRET_KEY = "LORPULSE_OPERATOR_2026"; 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -34,34 +31,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
       updatedForm.city.trim() !== "" &&
       updatedForm.subjectLine.trim() !== "";
     setIsFormValid(valid);
-  };
-
-  const triggerAdminBypass = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan_type: "core",
-          niche: formData.niche,
-          city: formData.city,
-          email: formData.email,
-          email_subject_line: formData.subjectLine,
-          paypal_order_id: `BYPASS_ADMIN_${Date.now()}`
-        })
-      });
-
-      if (response.ok) {
-        setSuccess(true);
-      } else {
-        console.error("Backend returned error status:", response.status);
-      }
-    } catch (error) {
-      console.error("Failed to securely deploy pipeline boundaries:", error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   if (plan === "horizon") {
@@ -81,6 +50,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      {/* كبرنا الـ max-w لـ 4xl باش الـ ديسكطوب يـاخد اتساع خيالي */}
       <div className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[95vh] ${step === "payment" ? "max-w-4xl" : "max-w-md"}`}>
         
         <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10">✕</button>
@@ -112,30 +82,19 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                     <input type="text" name="subjectLine" value={formData.subjectLine} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., Quick question regarding your scaling..." />
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-zinc-500 font-medium mb-1.5">Access / Promo Code <span className="text-zinc-600">(Optional)</span></label>
-                    <input type="text" name="accessCode" value={formData.accessCode} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-700 font-mono text-xs" placeholder="ENTER SECRET KEY FOR FREE ACCESS" />
-                  </div>
-
                   <button
                     disabled={!isFormValid}
-                    onClick={() => {
-                      if (formData.accessCode.trim() === ADMIN_SECRET_KEY) {
-                        triggerAdminBypass();
-                      } else {
-                        setStep("payment");
-                      }
-                    }}
+                    onClick={() => setStep("payment")}
                     className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${isFormValid ? "bg-white text-black hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5" : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"}`}
                   >
-                    {formData.accessCode.trim() === ADMIN_SECRET_KEY ? "Execute Free Operator Extraction ⚡" : "Proceed to Secure Checkout"}
+                    Proceed to Secure Checkout
                   </button>
                 </div>
               </div>
             ) : (
               /* ================= STEP 2: STRIPE-STYLE ULTRA WIDE GRID ================= */
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
-                {/* Left Side: Summary */}
+                {/* Left Side: Summary (عطيناها 4 د السواري فقط باش نخليو الاتساع للـ لخرين) */}
                 <div className="md:col-span-4 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
                     <button onClick={() => setStep("details")} className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors">
@@ -156,15 +115,21 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                   </div>
                 </div>
 
-                {/* Right Side: Embedded Payment Layer */}
+                {/* Right Side: Embedded Payment Layer (عطيناها 8 د السواري - قمة الاتساع) */}
                 <div className="md:col-span-8 flex flex-col justify-start w-full min-h-[400px]">
                   <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4 px-1">Select Payment Method</h4>
                   
+                  {/* هنا حيدنا الـ padding وخلينا العرض كامل w-full و overflow-visible باش الـ iframe ياخد راحتو */}
                   <div className="w-full block overflow-visible px-1">
                     {paypalClientId ? (
                       <PayPalScriptProvider options={{ "client-id": paypalClientId, components: "buttons" }}>
                         <PayPalButtons
-                          style={{ layout: "vertical", color: "black", shape: "rect", label: "pay" }}
+                          style={{ 
+                            layout: "vertical", 
+                            color: "black", 
+                            shape: "rect", 
+                            label: "pay" 
+                          }}
                           createOrder={(_, actions) => {
                             return actions.order.create({
                               purchase_units: [{
