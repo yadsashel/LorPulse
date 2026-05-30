@@ -12,7 +12,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     niche: "",
     city: "",
     subjectLine: "",
-    accessCode: "", // الخانة السرية ديالك آ مـعلّم
+    accessCode: "", 
   });
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
   const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
   
-  // 🔐 الكود السري ديالك - تقدر تبدلو من هنا أولا تخليه هكا
   const ADMIN_SECRET_KEY = "LORPULSE_OPERATOR_2026"; 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +36,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     setIsFormValid(valid);
   };
 
-  // دالة لتشغيل الـ Backend مباشرة بلا PayPal (خيار الأدمن)
   const triggerAdminBypass = async () => {
     setLoading(true);
     try {
@@ -50,7 +48,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           city: formData.city,
           email: formData.email,
           email_subject_line: formData.subjectLine,
-          paypal_order_id: `BYPASS_ADMIN_${Date.now()}` // كود وهمي باش الـ Backend يقبلو
+          paypal_order_id: `BYPASS_ADMIN_${Date.now()}`
         })
       });
 
@@ -114,20 +112,18 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                     <input type="text" name="subjectLine" value={formData.subjectLine} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., Quick question regarding your scaling..." />
                   </div>
 
-                  {/* 🔐 الخانة السرية للأدمن والـ VIP */}
                   <div>
                     <label className="block text-[10px] uppercase tracking-wider text-zinc-500 font-medium mb-1.5">Access / Promo Code <span className="text-zinc-600">(Optional)</span></label>
                     <input type="text" name="accessCode" value={formData.accessCode} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-700 font-mono text-xs" placeholder="ENTER SECRET KEY FOR FREE ACCESS" />
                   </div>
 
-                  {/* الـ Button كيتغير الـ text ديالو إيلا كان الكود صحيح */}
                   <button
                     disabled={!isFormValid}
                     onClick={() => {
                       if (formData.accessCode.trim() === ADMIN_SECRET_KEY) {
-                        triggerAdminBypass(); // كايتجاوز الـ PayPal ويمشي نيشان للـ Backend
+                        triggerAdminBypass();
                       } else {
-                        setStep("payment"); // كيمشي للـ PayPal عادي
+                        setStep("payment");
                       }
                     }}
                     className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${isFormValid ? "bg-white text-black hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5" : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"}`}
@@ -201,7 +197,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                               }
                             } catch (error) {
                               console.error("Failed to securely deploy pipeline boundaries:", error);
-                            } opacity-100 finally {
+                            } finally {
                               setLoading(false);
                             }
                           }}
