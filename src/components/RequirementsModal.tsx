@@ -16,8 +16,8 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState<"details" | "payment">("details"); // لتتبع الخطوات مثل Stripe
 
-  // جلب الـ Client ID الآمن من البيئة (Vite Environment)
   const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,13 +36,13 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   if (plan === "horizon") {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div className="relative w-full max-w-md glass-strong border border-white/10 p-8 rounded-3xl text-center">
-          <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-sm">✕</button>
-          <div className="inline-flex items-center gap-2 rounded-full bg-purple-500/10 px-3 py-1 text-xs text-[oklch(0.78_0.18_300)] mb-4">Pulse Horizon</div>
-          <h3 className="font-display text-2xl font-semibold">Horizon Extraction Loop</h3>
-          <p className="mt-3 text-sm text-muted-foreground">The recurring live data extraction dashboard and AI loop automation is currently in private deployment.</p>
-          <div className="mt-6 bg-white/5 border border-white/15 p-4 rounded-xl text-xs text-yellow-500">🚀 Setting up infrastructure. Access expands next week!</div>
-          <button onClick={onClose} className="mt-6 w-full halo-btn rounded-xl py-3 text-sm font-semibold bg-white/10 border border-white/10">Close Window</button>
+        <div className="relative w-full max-w-md bg-zinc-950 border border-zinc-800 p-8 rounded-3xl text-center shadow-2xl animate-fadeIn">
+          <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm">✕</button>
+          <div className="inline-flex items-center gap-2 rounded-full bg-purple-500/10 px-3 py-1 text-xs text-purple-400 mb-4">Pulse Horizon</div>
+          <h3 className="font-display text-2xl font-semibold text-white">Horizon Extraction Loop</h3>
+          <p className="mt-3 text-sm text-zinc-400">The recurring live data extraction dashboard and AI loop automation is currently in private deployment.</p>
+          <div className="mt-6 bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-xs text-yellow-500">🚀 Setting up infrastructure. Access expands next week!</div>
+          <button onClick={onClose} className="mt-6 w-full bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl py-3 text-sm font-semibold transition-all">Close Window</button>
         </div>
       </div>
     );
@@ -50,104 +50,147 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-md glass-strong border border-white/10 p-6 sm:p-8 rounded-3xl text-left overflow-y-auto max-h-[90vh]">
-        <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-sm">✕</button>
+      {/* Dynamic size: gets wider on payment step to look like Stripe Checkout split-screen */}
+      <div className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/80 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[90vh] ${step === "payment" ? "max-w-2xl" : "max-w-md"}`}>
+        
+        <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10">✕</button>
 
         {!success ? (
           <>
-            <div className="text-xs uppercase tracking-[0.25em] text-[oklch(0.78_0.18_300)] mb-1">Onboarding Setup</div>
-            <h3 className="font-display text-2xl font-semibold">Configure Your Pipeline</h3>
-            <p className="text-xs text-muted-foreground mt-1 mb-6">Pulse Core Plan — One-time activation fee of $14.</p>
+            {step === "details" ? (
+              /* ================= STEP 1: PREMIUM STRIPE FORM ================= */
+              <div className="animate-fadeIn">
+                <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">Onboarding Setup</div>
+                <h3 className="font-display text-2xl font-semibold text-white tracking-tight">Configure Your Pipeline</h3>
+                <p className="text-xs text-zinc-400 mt-1 mb-6">Pulse Core Plan — One-time activation fee of $14.</p>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Your Delivery Email</label>
-                <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full bg-white/[0.03] border border-white/10 p-3 rounded-xl text-sm text-foreground focus:outline-none focus:border-[oklch(0.78_0.18_300)] transition-colors" placeholder="operator@agency.com" />
-              </div>
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Target Niche / Industry Corridor</label>
-                <input type="text" name="niche" value={formData.niche} onChange={handleInputChange} className="w-full bg-white/[0.03] border border-white/10 p-3 rounded-xl text-sm text-foreground focus:outline-none focus:border-[oklch(0.78_0.18_300)] transition-colors" placeholder="e.g., Series-A SaaS, Dubai Luxury Real Estate" />
-              </div>
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Target City / Geo-Location</label>
-                <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-white/[0.03] border border-white/10 p-3 rounded-xl text-sm text-foreground focus:outline-none focus:border-[oklch(0.78_0.18_300)] transition-colors" placeholder="e.g., San Francisco, London, Global" />
-              </div>
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Cold Email Subject Line Reference</label>
-                <input type="text" name="subjectLine" value={formData.subjectLine} onChange={handleInputChange} className="w-full bg-white/[0.03] border border-white/10 p-3 rounded-xl text-sm text-foreground focus:outline-none focus:border-[oklch(0.78_0.18_300)] transition-colors" placeholder="e.g., Quick question regarding your scaling..." />
-              </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Your Delivery Email</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="operator@agency.com" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Target Niche / Industry Corridor</label>
+                    <input type="text" name="niche" value={formData.niche} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., Series-A SaaS, Dubai Real Estate" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Target City / Geo-Location</label>
+                    <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., San Francisco, London" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Cold Email Subject Line Reference</label>
+                    <input type="text" name="subjectLine" value={formData.subjectLine} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., Quick question regarding your scaling..." />
+                  </div>
 
-              {isFormValid && paypalClientId ? (
-                <div className="mt-6 pt-4 border-t border-white/5 animate-fadeIn">
-                  <p className="text-[11px] text-zinc-400 text-center mb-3">Secure deployment via PayPal Core Layer</p>
-                  <PayPalScriptProvider options={{ "client-id": paypalClientId }}>
-                    <PayPalButtons
-                      style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
-                      createOrder={(_, actions) => {
-                        return actions.order.create({
-                          purchase_units: [{
-                            amount: { value: "14.00" },
-                            description: `LorPulse Core: 5,000 ${formData.niche} Leads for ${formData.email}`
-                          }]
-                        });
-                      }}
-                      onApprove={async (_, actions) => {
-                        if (!actions.order) return;
-                        setLoading(true);
-                        const details = await actions.order.capture();
+                  <button
+                    disabled={!isFormValid}
+                    onClick={() => setStep("payment")}
+                    className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${isFormValid ? "bg-white text-black hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5" : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"}`}
+                  >
+                    Proceed to Secure Checkout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* ================= STEP 2: STRIPE-STYLE SPLIT CHECKOUT ================= */
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-slideIn">
+                {/* Left Side: Order Summary */}
+                <div className="border-b md:border-b-0 md:border-r border-zinc-800 pb-6 md:pb-0 md:pr-8 flex flex-col justify-between">
+                  <div>
+                    <button onClick={() => setStep("details")} className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors">
+                      ← Edit info
+                    </button>
+                    <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">Pay LorPulse</div>
+                    <h4 className="text-3xl font-bold text-white tracking-tight">$14.00</h4>
+                    
+                    <div className="mt-6 space-y-3 bg-zinc-900/50 border border-zinc-900 p-4 rounded-xl text-xs">
+                      <div className="flex justify-between"><span className="text-zinc-500">Pipeline:</span> <span className="text-zinc-300 font-medium">Pulse Core</span></div>
+                      <div className="flex justify-between"><span className="text-zinc-500">Niche:</span> <span className="text-zinc-300 truncate max-w-[150px] font-medium">{formData.niche}</span></div>
+                      <div className="flex justify-between"><span className="text-zinc-500">Target:</span> <span className="text-zinc-300 font-medium">{formData.city}</span></div>
+                      <div className="flex justify-between"><span className="text-zinc-500">Delivery:</span> <span className="text-zinc-300 truncate max-w-[150px] font-medium">{formData.email}</span></div>
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-zinc-600 mt-6">
+                    Secured by PayPal encryption layer. Authorized B2B lead generation node execution.
+                  </div>
+                </div>
 
-                        try {
-                          const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              plan_type: "core",
-                              niche: formData.niche,
-                              city: formData.city,
-                              email: formData.email,
-                              email_subject_line: formData.subjectLine,
-                              paypal_order_id: details.id
-                            })
+                {/* Right Side: Embedded Premium Button Window */}
+                <div className="flex flex-col justify-center">
+                  <h4 className="text-sm font-medium text-white mb-4">Select Payment Method</h4>
+                  {paypalClientId ? (
+                    <PayPalScriptProvider options={{ "client-id": paypalClientId }}>
+                      <PayPalButtons
+                        // الستيل الأسود الفخم بحال Stripe تماما
+                        style={{ layout: "vertical", color: "black", shape: "rect", label: "pay" }}
+                        createOrder={(_, actions) => {
+                          return actions.order.create({
+                            purchase_units: [{
+                              amount: { value: "14.00" },
+                              description: `LorPulse Core: 5,000 ${formData.niche} Leads`
+                            }]
                           });
+                        }}
+                        onApprove={async (_, actions) => {
+                          if (!actions.order) return;
+                          setLoading(true);
+                          const details = await actions.order.capture();
 
-                          if (response.ok) {
-                            setSuccess(true);
+                          try {
+                            const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                plan_type: "core",
+                                niche: formData.niche,
+                                city: formData.city,
+                                email: formData.email,
+                                email_subject_line: formData.subjectLine,
+                                paypal_order_id: details.id
+                              })
+                            });
+
+                            if (response.ok) {
+                              setSuccess(true);
+                            }
+                          } catch (error) {
+                            console.error("Failed to securely deploy pipeline boundaries:", error);
+                          } finally {
+                            setLoading(false);
                           }
-                        } catch (error) {
-                          console.error("Failed to securely deploy pipeline boundaries:", error);
-                        } finally {
-                          setLoading(false);
-                        }
-                      }}
-                    />
-                  </PayPalScriptProvider>
+                        }}
+                      />
+                    </PayPalScriptProvider>
+                  ) : (
+                    <div className="text-xs text-red-400 bg-red-500/5 p-3 border border-red-500/10 rounded-xl">
+                      Failed to load secure API layer. Please refresh.
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="mt-6 text-center text-xs text-muted-foreground bg-white/[0.02] border border-white/5 p-3 rounded-xl">
-                  Fill all required vectors above to initialize secure checkout.
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </>
         ) : (
-          <div className="text-center py-6 animate-fadeIn">
-            <span className="text-5xl text-glow">⚡</span>
-            <h3 className="font-display text-2xl font-semibold mt-4 text-purple-400">Pipeline Deployed!</h3>
-            <p className="text-sm text-muted-foreground mt-2">
-              Payment verified successfully. LorPulse AI Core has queued extraction loops for <b>{formData.niche}</b>. 
-              The verified CSV dataset will land at <b>{formData.email}</b> within 24 hours.
+          /* ================= SUCCESS STATE ================= */
+          <div className="text-center py-8 max-w-md mx-auto animate-fadeIn">
+            <span className="text-5xl">⚡</span>
+            <h3 className="font-display text-2xl font-semibold mt-4 text-purple-400 tracking-tight">Pipeline Deployed!</h3>
+            <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
+              Payment verified successfully. LorPulse AI Core has queued extraction loops for <span className="text-white font-medium">{formData.niche}</span>. 
+              The verified CSV dataset will land at <span className="text-white font-medium">{formData.email}</span> within 24 hours.
             </p>
-            <button onClick={onClose} className="mt-8 w-full halo-btn rounded-xl py-3 text-sm font-semibold bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border border-white/15">
+            <button onClick={onClose} className="mt-8 w-full bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 rounded-xl py-3 text-sm font-semibold transition-all">
               Return to Operator Dashboard
             </button>
           </div>
         )}
 
+        {/* ================= LOADING EMBED LAYER ================= */}
         {loading && (
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
-            <div className="h-8 w-8 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
-            <div className="text-xs uppercase tracking-widest text-[oklch(0.78_0.18_300)] animate-pulse">Initializing Agentic Miner...</div>
-            <p className="text-xs text-muted-foreground max-w-xs mt-2">Securing data routing layer and executing background thread triggers on Hugging Face.</p>
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-50 animate-fadeIn">
+            <div className="h-6 w-6 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
+            <div className="text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse">Initializing Agentic Miner...</div>
+            <p className="text-xs text-zinc-500 max-w-xs mt-2">Securing data routing layer and executing background triggers on Hugging Face.</p>
           </div>
         )}
       </div>
