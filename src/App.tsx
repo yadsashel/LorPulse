@@ -119,7 +119,7 @@ export default function App() {
               <PricingCard badge="Pulse Core" price="$14" cadence="one-time" headline="Verified Leads, On Demand." subtitle="5,000 Verified B2B Leads, Specialized by Niche." features={["5,000 verified business emails","Niche & geo targeting","One-time curated dataset","Instant CSV download via email","Tech stack & headcount enrichment"]} ctaLabel="HUNT FOR $14" onClick={() => setModal("core")} />
             </Reveal>
             <Reveal delay={100}>
-              <PricingCard featured badge="Pulse Horizon" price="$24" cadence="/month" headline="Forever Leads Pipeline." subtitle="Recurring live data extraction + automated personalization tool." features={["Weekly fresh leads delivery","Live intent tracker dashboard","Unlimited niche searches","AI personalization loop — {First_Name}, {Company_Name}","Priority pipeline support"]} ctaLabel="SUBSCRIBE FOR $24" onClick={() => setModal("horizon")} />
+              <PricingCard featured badge="Pulse Horizon" price="$24" cadence="/month" headline="Forever Leads Pipeline." subtitle="Recurring live data extraction + automated personalization tool." features={["Weekly fresh leads delivery","Live intent tracker dashboard","Unlimited niche searches","AI personalization loop — {First_Name}, {Company_Name}","Priority pipeline support"]} ctaLabel="Coming Soon" onClick={() => setModal("horizon")} />
             </Reveal>
           </div>
 
