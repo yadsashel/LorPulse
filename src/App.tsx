@@ -66,7 +66,7 @@ export default function App() {
                 {[
                   ["98.4%", "Email deliverability"],
                   ["12k+", "Niches mapped"],
-                  ["1.2M", "Verified contacts / mo"],
+                  ["500", "Leads per batch"],
                   ["<24h", "Dataset turnaround"],
                 ].map(([k, v]) => (
                   <div key={v} className="glass halo rounded-2xl px-5 py-5 text-left">
@@ -91,7 +91,7 @@ export default function App() {
 
             <div className="grid grid-cols-12 gap-4 sm:gap-5">
               <Reveal className="col-span-12 md:col-span-7" delay={0}>
-                <FeatureCard tag="Intent-Driven" title="Buyers ready in the next 30 days" body="Surface accounts triggering hiring spikes, funding signals, vendor switches, and product launches — scored 0–100 by our intent model." stat="3,000 Verified Tech Leads · San Francisco" tall />
+                <FeatureCard tag="Intent-Driven" title="Buyers ready in the next 30 days" body="Surface accounts triggering hiring spikes, funding signals, vendor switches, and product launches — scored 0–100 by our intent model." stat="500 Verified Tech Leads · San Francisco" tall />
               </Reveal>
               <Reveal className="col-span-12 md:col-span-5" delay={60}>
                 <FeatureCard tag="Niche-Specific Scraping" title="Hand-mapped industry corridors" body="From Series-B AI infra to Dubai luxury brokers — we maintain dedicated scrapers per vertical." stat="Weekly Dubai Real Estate Data Feed" />
@@ -121,7 +121,7 @@ export default function App() {
 
             <div className="grid md:grid-cols-2 gap-5">
               <Reveal>
-                <PricingCard badge="Pulse Core" price="$14" cadence="one-time" headline="Verified Leads, On Demand." subtitle="5,000 Verified B2B Leads, Specialized by Niche." features={["5,000 verified business emails","Niche & geo targeting","One-time curated dataset","Instant CSV download via email","Tech stack & headcount enrichment"]} ctaLabel="HUNT FOR $14" onClick={() => setModal("core")} />
+                <PricingCard badge="Pulse Core" price="$5" cadence="one-time" headline="500 Verified Leads, On Demand." subtitle="500 Verified B2B Leads, targeted to any niche and city worldwide." features={["Exactly 500 verified B2B emails","Any niche & city in the world","One-time curated dataset","Instant CSV download via email","Live scraped and verified"]} ctaLabel="HUNT FOR $5" onClick={() => setModal("core")} />
               </Reveal>
               <Reveal delay={100}>
                 <PricingCard featured badge="Pulse Horizon" price="$24" cadence="/month" headline="Forever Leads Pipeline." subtitle="Recurring live data extraction + automated personalization tool." features={["Weekly fresh leads delivery","Live intent tracker dashboard","Unlimited niche searches","AI personalization loop — {First_Name}, {Company_Name}","Priority pipeline support"]} ctaLabel="Coming Soon" onClick={() => setModal("horizon")} />

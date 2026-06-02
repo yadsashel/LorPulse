@@ -149,11 +149,11 @@ Why should you trust this data?
 - Triple-Validated: SMTP and catch-all filtering guarantee a 98.4% deliverability rate.
 - Intent-Driven: Scored 0–100 based on active hiring spikes and funding signals.
 
-Our pipeline currently holds the remaining 4,950 highly specialized leads matching this exact quality blueprint, ready for instant download.
+Our pipeline currently holds the remaining 450 highly specialized leads matching this exact quality blueprint, ready for instant download.
 
-We are currently onboarding operators into our Private Beta. You can unlock the full dataset of 5,000 leads right now for a one-time activation of just $14 (No subscriptions, no hidden fees).
+We are currently onboarding operators into our Private Beta. You can unlock the full dataset of 500 leads right now for a one-time activation of just $5 (No subscriptions, no hidden fees).
 
-Check the 50 free contacts first. If they match your standards, grab the remaining 4,950 here:
+Check the 50 free contacts first. If they match your standards, grab the remaining 450 here:
 🔗 lorpulse.vercel.app
 
 To your next close,
@@ -220,7 +220,7 @@ LorPulse Operator Core
                   Configure Your Pipeline {isOwnerMode && <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async)</span>}
                 </h3>
                 
-                <p className="text-xs text-zinc-400 mt-1 mb-6">Pulse Core Plan — One-time activation fee of $14.</p>
+                <p className="text-xs text-zinc-400 mt-1 mb-6">Pulse Core Plan — One-time activation fee of $5.</p>
 
                 <div className="space-y-4">
                   <div>
@@ -263,7 +263,7 @@ LorPulse Operator Core
                       ← Edit info
                     </button>
                     <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">Pay LorPulse</div>
-                    <h4 className="text-3xl font-bold text-white tracking-tight">$14.00</h4>
+                    <h4 className="text-3xl font-bold text-white tracking-tight">$5.00</h4>
                     
                     <div className="mt-6 space-y-3 bg-zinc-900/40 border border-zinc-900 p-4 rounded-xl text-xs">
                       <div className="flex justify-between"><span className="text-zinc-500">Pipeline:</span> <span className="text-zinc-300 font-medium">Pulse Core</span></div>
@@ -286,8 +286,8 @@ LorPulse Operator Core
                       createOrder={(_, actions) => {
                         return actions.order.create({
                           purchase_units: [{
-                            amount: { value: "14.00" },
-                            description: `LorPulse Core: 5,000 ${formData.niche} Leads`
+                            amount: { value: "5.00" },
+                            description: `LorPulse Core: 500 ${formData.niche} Leads`
                           }]
                         });
                       }}
@@ -318,7 +318,7 @@ LorPulse Operator Core
             <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
               {isOwnerMode 
                 ? `The compiled CSV dataset for ${formData.niche} has been automatically downloaded to your local drive.`
-                : `Success! Your 5,000 hyper-verified B2B leads file has been downloaded directly inside your browser. Concurrently, the structured confirmation and fallback download link have been dispatched to your email at ${formData.email} via Brevo.`
+                : `Success! Your 500 hyper-verified B2B leads file has been downloaded directly inside your browser. Concurrently, the structured confirmation and fallback download link have been dispatched to your email at ${formData.email} via Brevo.`
               }
             </p>
             <button onClick={onClose} className="mt-8 w-full bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 rounded-xl py-3 text-sm font-semibold transition-all">
