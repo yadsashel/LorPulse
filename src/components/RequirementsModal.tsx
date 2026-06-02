@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 
 interface RequirementsModalProps {
   plan: "core" | "horizon";
@@ -21,8 +21,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   // 🔐 ساروت الأدمن السري (Unlimited Free Owner Access)
   const [isOwnerMode, setIsOwnerMode] = useState(false);
   const [clickCount, setClickCount] = useState(0);
-
-  const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
   useEffect(() => {
     if (localStorage.getItem("lorpulse_owner_access") === "true") {
@@ -104,7 +102,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
     try {
-      // تركيب الـ Hollywood Entrance Template صيفطوه للـ Backend باش يدوز ديريكت للإيميل
       const hollywoodEmailTemplate = `
 Subject: Hand-extracted B2B data pipeline for ${formData.niche} (50 free verified records inside)
 
@@ -143,12 +140,11 @@ LorPulse Operator Core
           email: formData.email,
           email_subject_line: formData.subjectLine,
           paypal_order_id: orderId,
-          hollywood_template: hollywoodEmailTemplate // الـ Payload الهوليودي ناضي للـ Backend
+          hollywood_template: hollywoodEmailTemplate
         })
       });
 
       if (response.ok) {
-        // 📥 طحن الـ Auto-Download للكليان ف البلاصة وسط الصفحة!
         const blob = await response.blob();
         downloadCSVDirectly(blob);
         setSuccess(true);
@@ -186,7 +182,6 @@ LorPulse Operator Core
         {!success ? (
           <>
             {step === "details" ? (
-              /* ================= STEP 1: FORM DETAILS ================= */
               <div className="animate-fadeIn">
                 <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">Onboarding Setup</div>
                 
@@ -230,9 +225,7 @@ LorPulse Operator Core
                 </div>
               </div>
             ) : (
-              /* ================= STEP 2: STRIPE-STYLE ULTRA WIDE GRID ================= */
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
-                {/* Left Side: Summary */}
                 <div className="md:col-span-4 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
                     <button onClick={() => setStep("details")} className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors">
@@ -253,43 +246,39 @@ LorPulse Operator Core
                   </div>
                 </div>
 
-                {/* Right Side: Embedded Payment Layer */}
                 <div className="md:col-span-8 flex flex-col justify-start w-full min-h-[400px]">
                   <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4 px-1">Select Payment Method</h4>
                   
                   <div className="w-full block overflow-visible px-1">
-                    {paypalClientId ? (
-                      <PayPalScriptProvider options={{ "client-id": paypalClientId, components: "buttons" }}>
-                        <PayPalButtons
-                          style={{ layout: "vertical", color: "black", shape: "rect", label: "pay" }}
-                          createOrder={(_, actions) => {
-                            return actions.order.create({
-                              purchase_units: [{
-                                amount: { value: "14.00" },
-                                description: `LorPulse Core: 5,000 ${formData.niche} Leads`
-                              }]
-                            });
-                          }}
-                          onApprove={async (_, actions) => {
-                            if (!actions.order) return;
-                            setLoading(true);
-                            const details = await actions.order.capture();
-                            await handleClientPaymentSuccess(details.id);
-                          }}
-                        />
-                      </PayPalScriptProvider>
-                    ) : (
-                      <div className="text-xs text-red-400 bg-red-500/5 p-3 border border-red-500/10 rounded-xl">
-                        Failed to load secure API layer. Please refresh.
-                      </div>
-                    )}
+                    <PayPalButtons
+                      style={{ layout: "vertical", color: "black", shape: "rect", label: "pay" }}
+                      createOrder={(_, actions) => {
+                        return actions.order.create({
+                          purchase_units: [{
+                            amount: { value: "14.00" },
+                            description: `LorPulse Core: 5,000 ${formData.niche} Leads`
+                          }]
+                        });
+                      }}
+                      onApprove={async (_, actions) => {
+                        if (!actions.order) return;
+                        try {
+                          setLoading(true);
+                          const details = await actions.order.capture();
+                          await handleClientPaymentSuccess(details.id);
+                        } catch (error) {
+                          console.error("PayPal Capture Error:", error);
+                          alert("Transaction execution failed during network sync. Please retry.");
+                          setLoading(false);
+                        }
+                      }}
+                    />
                   </div>
                 </div>
               </div>
             )}
           </>
         ) : (
-          /* ================= INSTANT DISPATCH SUCCESS STATE ================= */
           <div className="text-center py-8 max-w-md mx-auto animate-fadeIn">
             <span className="text-5xl">⚡</span>
             <h3 className="font-display text-2xl font-semibold mt-4 text-purple-400 tracking-tight">
@@ -307,7 +296,6 @@ LorPulse Operator Core
           </div>
         )}
 
-        {/* ================= ULTRA-SPEED EMBED LOADING LAYER ================= */}
         {loading && (
           <div className="absolute inset-0 bg-black/95 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-50 animate-fadeIn">
             <div className="h-6 w-6 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
