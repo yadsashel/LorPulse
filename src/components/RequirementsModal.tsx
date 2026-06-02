@@ -18,6 +18,10 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState<"details" | "payment">("details");
   
+  // 🔄 تتبع حالة الـ Background Crawler والتقدم لايف
+  const [progress, setProgress] = useState(0);
+  const [loadingStatusText, setLoadingStatusText] = useState("Touring Web Corridors...");
+
   // 🔐 ساروت الأدمن السري (Unlimited Free Owner Access)
   const [isOwnerMode, setIsOwnerMode] = useState(false);
   const [clickCount, setClickCount] = useState(0);
@@ -34,7 +38,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     if (newCount >= 5) {
       localStorage.setItem("lorpulse_owner_access", "true");
       setIsOwnerMode(true);
-      alert("⚡ Owner Privilege Engaged. Direct backend loop with instant auto-download enabled.");
+      alert("⚡ Owner Privilege Engaged. Background async tracking activated.");
     }
   };
 
@@ -51,24 +55,48 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     setIsFormValid(valid);
   };
 
-  // 📥 دالة مشتركة للتحميل التلقائي للـ CSV مباشرة ف المتصفح (للأدمن وللكليان)
-  const downloadCSVDirectly = (blobData: Blob) => {
-    const url = window.URL.createObjectURL(blobData);
-    const link = document.createElement("a");
-    link.href = url;
-    
-    const fileName = `lorpulse_${formData.niche.toLowerCase().replace(/\s+/g, "_")}_5000_leads.csv`;
-    link.setAttribute("download", fileName);
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+  // 📥 الفانكشن السحرية د الـ Polling: كتعرف السيرفر فين وصل وكتنزّل الـ CSV غير يسالي
+  const startPollingCampaign = (campaignId: number) => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/status`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        if (data.status === "processing") {
+          setProgress(data.progress);
+          setLoadingStatusText(`Extracting B2B Corporate Leads: ${data.progress}%`);
+        } 
+        
+        else if (data.status === "completed") {
+          setProgress(100);
+          setLoadingStatusText("✅ Compilation 100% Complete! Triggering auto-download...");
+          clearInterval(interval);
+          
+          // تنزيل تلقائي ف الحين من رابط السيرفر المباشر
+          window.location.href = `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/download`;
+          
+          setSuccess(true);
+          setLoading(false);
+        } 
+        
+        else if (data.status === "failed") {
+          clearInterval(interval);
+          setLoading(false);
+          alert("🚨 Pipeline extraction hit a wall for this specific criteria. Verify your niche string.");
+        }
+      } catch (err) {
+        console.error("Polling sync lost:", err);
+      }
+    }, 4000); // كيسول الباكيند كل 4 ثواني
   };
 
-  // 🚀 تشغيل الـ Pipeline للأدمن فابور
+  // 🚀 تشغيل الـ Pipeline للأدمن فابور (بالـ Background Task الجديدة)
   const triggerOwnerBypass = async () => {
     setLoading(true);
+    setProgress(5);
+    setLoadingStatusText("Initializing Secure Async Pipeline Node...");
     try {
       const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
         method: "POST",
@@ -79,28 +107,30 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           city: formData.city,
           email: formData.email,
           email_subject_line: formData.subjectLine,
-          paypal_order_id: `OWNER_UNLIMITED_HUNT_${Date.now()}`
+          paypal_order_id: `OWNER_ASYNC_HUNT_${Date.now()}`
         })
       });
 
-      if (response.ok) {
-        const blob = await response.blob();
-        downloadCSVDirectly(blob);
-        setSuccess(true);
+      if (response.status === 202) {
+        const data = await response.json();
+        // البدء ف مراقبة السيرفر لايف حيت الخدمة بدات ف الخلفية
+        startPollingCampaign(data.campaign_id);
       } else {
         alert("Extraction loop encountered an error on the Hugging Face node.");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Owner pipeline execution failed:", error);
-      alert("Network timeout. Ensure your Hugging Face Space is active.");
-    } finally {
+      alert("Network connection error. Check Hugging Face instance logs.");
       setLoading(false);
     }
   };
 
-  // 💳 معالجة الدفع الحقيقي للكليان وتشغيل الـ Hollywood Dynamic Dispatch
+  // 💳 معالجة الدفع الحقيقي للكليان وتفعيل الـ Tracking لايف
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
+    setProgress(5);
+    setLoadingStatusText("Verifying capture & spawning extraction threads...");
     try {
       const hollywoodEmailTemplate = `
 Subject: Hand-extracted B2B data pipeline for ${formData.niche} (50 free verified records inside)
@@ -113,7 +143,7 @@ I ran your ecosystem through our autonomous intelligence pipeline, LorPulse. Bas
 
 Instead of telling you how good our data is, here are your first 50 verified decision-maker leads for free—hand-enriched with 14 unique data points (including exact tech stack, company headcount, and verified corporate structure):
 
-👉 [YOUR CUSTOM 50 FREE LEADS GOOGLE SHEET LINK DISPATCHED TO ${formData.email}]
+👉 [YOUR CUSTOM 50 FREE LEADS GOOGLE SHEET LINK DISPATCHED]
 
 Why should you trust this data?
 - Triple-Validated: SMTP and catch-all filtering guarantee a 98.4% deliverability rate.
@@ -144,16 +174,17 @@ LorPulse Operator Core
         })
       });
 
-      if (response.ok) {
-        const blob = await response.blob();
-        downloadCSVDirectly(blob);
-        setSuccess(true);
+      if (response.status === 202) {
+        const data = await response.json();
+        // ربط المتصفح مع السيرفر لايف حيت الدفع داز والـ Task بدات
+        startPollingCampaign(data.campaign_id);
       } else {
-        alert("Payment verified, but server pipeline is stabilizing. Check your email for direct download link.");
+        alert("Payment verified, but server pipeline initialization failed. Support notified.");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Client pipeline injection failed:", error);
-    } finally {
+      alert("Network error synchronization. The server will deliver via Brevo email backup.");
       setLoading(false);
     }
   };
@@ -186,7 +217,7 @@ LorPulse Operator Core
                 <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">Onboarding Setup</div>
                 
                 <h3 onClick={handleSecretClick} className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none">
-                  Configure Your Pipeline {isOwnerMode && <span className="text-emerald-400 text-xs ml-1">● Owner Mode</span>}
+                  Configure Your Pipeline {isOwnerMode && <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async)</span>}
                 </h3>
                 
                 <p className="text-xs text-zinc-400 mt-1 mb-6">Pulse Core Plan — One-time activation fee of $14.</p>
@@ -220,7 +251,7 @@ LorPulse Operator Core
                     }}
                     className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${isFormValid ? "bg-white text-black hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5" : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"}`}
                   >
-                    {isOwnerMode ? "Execute Free Owner Extraction ⚡" : "Proceed to Secure Checkout"}
+                    {isOwnerMode ? "Execute Async Owner Extraction ⚡" : "Proceed to Secure Checkout"}
                   </button>
                 </div>
               </div>
@@ -287,7 +318,7 @@ LorPulse Operator Core
             <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
               {isOwnerMode 
                 ? `The compiled CSV dataset for ${formData.niche} has been automatically downloaded to your local drive.`
-                : `Success! Your 5,000 hyper-verified B2B leads file has been downloaded directly inside your browser. Concurrently, the structured Hollywood Entrance email sequence containing the first 50 catch-all verified decision-makers has been dispatched to ${formData.email}.`
+                : `Success! Your 5,000 hyper-verified B2B leads file has been downloaded directly inside your browser. Concurrently, the structured confirmation and fallback download link have been dispatched to your email at ${formData.email} via Brevo.`
               }
             </p>
             <button onClick={onClose} className="mt-8 w-full bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 rounded-xl py-3 text-sm font-semibold transition-all">
@@ -300,10 +331,21 @@ LorPulse Operator Core
           <div className="absolute inset-0 bg-black/95 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-50 animate-fadeIn">
             <div className="h-6 w-6 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
             <div className="text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse">
-              Touring Web Corridors...
+              {loadingStatusText}
             </div>
-            <p className="text-xs text-zinc-500 max-w-xs mt-2">
-              Bypassing noise filters. Compiling 5,000 specialized rows and structuring the Hollywood Entrance sequence layer.
+            
+            {/* 📊 بار متحرك وجميل يعبر عن الـ Progress الحقيقي اللي جاي من السيرفر */}
+            {progress > 0 && (
+              <div className="w-48 bg-zinc-900 h-1.5 rounded-full mt-4 overflow-hidden border border-zinc-850">
+                <div 
+                  className="bg-purple-500 h-1.5 rounded-full transition-all duration-300" 
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
+            
+            <p className="text-xs text-zinc-500 max-w-xs mt-3">
+              Bypassing noise filters. Compiling specialized rows asynchronously to eliminate client-side connection timeouts.
             </p>
           </div>
         )}
