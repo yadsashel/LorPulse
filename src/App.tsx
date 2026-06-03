@@ -192,7 +192,7 @@ export default function App() {
               <Reveal>
                 <PricingCard
                   badge="Pulse Core — Lead Intelligence"
-                  price="$7"
+                  price="$10"
                   cadence="one-time"
                   headline="500 Verified Leads, Delivered Now."
                   subtitle="Any niche. Any country or region worldwide. Scraped live, enriched, and auto-downloaded in minutes — no empty rows, no placeholders."
