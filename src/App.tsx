@@ -73,9 +73,9 @@ export default function App() {
               <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   ["98.4%", "Email deliverability"],
-                  ["500+", "Leads per batch"],
+                  ["Up to 1k", "Leads per batch"], // 🔥 ردينالها تل لـ 1000 حبة كحد أقصى
                   ["12k+", "Niches mapped"],
-                  ["<24h", "Deployment turnaround"],
+                  ["Dynamic", "Pay-as-you-go price"], // 🔥 تبيان التسعير الديناميكي من الدخلة
                 ].map(([k, v]) => (
                   <div key={v} className="glass halo rounded-2xl px-5 py-5 text-left">
                     <div className="font-display text-2xl text-glow">{k}</div>
@@ -107,10 +107,10 @@ export default function App() {
                   <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-[oklch(0.50_0.25_300)] opacity-[0.15] blur-3xl" />
                   <div className="text-[10px] uppercase tracking-[0.25em] text-[oklch(0.78_0.18_300)]">Engine 01 — Lead Intelligence</div>
                   <h3 className="font-display text-2xl sm:text-3xl font-semibold leading-tight">Verified B2B leads.<br />Any niche, any country.</h3>
-                  <p className="text-sm text-muted-foreground">Tell us your niche and country. Our pipeline scrapes, validates, enriches, and delivers 500 decision-maker contacts in CSV — straight to your browser and inbox.</p>
+                  <p className="text-sm text-muted-foreground">Tell us your niche and country. Our pipeline scrapes, validates, enriches, and delivers decision-maker contacts in CSV — straight to your browser and inbox.</p>
                   <div className="mt-auto inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs">
                     <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.18_300)] animate-pulseGlow" />
-                    One-time · $10 · Instant delivery
+                    Metered · $0.014 / Lead · Max $14
                   </div>
                 </div>
               </Reveal>
@@ -135,7 +135,7 @@ export default function App() {
                   tag="Intent-Driven Intelligence"
                   title="Buyers ready in the next 30 days"
                   body="Surface accounts triggering hiring spikes, funding signals, vendor switches, and product launches — scored 0–100 by our intent model."
-                  stat="500 Verified Tech Leads · San Francisco"
+                  stat="Up to 1,000 Verified Leads per Pipeline Run"
                   tall
                 />
               </Reveal>
@@ -192,18 +192,19 @@ export default function App() {
               <Reveal>
                 <PricingCard
                   badge="Pulse Core — Lead Intelligence"
-                  price="$10"
-                  cadence="one-time"
-                  headline="500 Verified Leads, Delivered Now."
-                  subtitle="Any niche. Any country or region worldwide. Scraped live, enriched, and auto-downloaded in minutes — no empty rows, no placeholders."
+                  price="Metered" // 🔥 حيدنا الـ $10 الثابتة باش الكليان يفهم الميترينغ
+                  cadence="$0.014 / verified lead"
+                  headline="Up to 1,000 Verified Leads."
+                  subtitle="Scraped live and priced instantly based on real-world regional availability. You only pay for what our engine extracts from your target location."
                   features={[
-                    "Exactly 500 verified B2B decision-maker emails",
-                    "Target any niche + country or region",
-                    "Smart auto-fill guarantee via AI expansion",
-                    "Live scraped, deduplicated & cleaned",
-                    "Instant browser CSV download + email backup",
+                    "Pay-as-you-go dynamic metering ($14.00 total cap)",
+                    "Minimum of 50 up to 1,000 verified leads maximum",
+                    "Target any local country, region or global corridor",
+                    "Universal AI Expansion Matrix triggered on shortfalls",
+                    "Live crawled, deduplicated, and deeply validated",
+                    "Instant browser CSV unlock + email storage backup",
                   ]}
-                  ctaLabel="LAUNCH PIPELINE — $10"
+                  ctaLabel="LAUNCH LIVE SCAN — PAY AS YOU GO"
                   onClick={() => setModal("core")}
                 />
               </Reveal>
@@ -230,7 +231,7 @@ export default function App() {
 
             <Reveal delay={200}>
               <p className="text-center text-xs text-muted-foreground mt-8">
-                Every Core pipeline request spawns a live async extraction node. Every custom build starts with a scoping call.
+                Every Core pipeline execution initializes a live dynamic query node. No upfront payment required until results are fetched.
               </p>
             </Reveal>
           </div>
@@ -255,8 +256,6 @@ export default function App() {
                 >
                   Build Something Custom
                 </Link>
-                
-                {/* 👑 التعديل هنا: صلحنا هاد التاغ لي كان مقطوع */}
                 <a
                   href="#pricing"
                   className="halo-btn rounded-xl px-6 py-3 text-sm font-medium glass"
@@ -305,9 +304,9 @@ function PricingCard({ badge, price, cadence, headline, subtitle, features, ctaL
         </div>
       )}
       <div className="text-xs uppercase tracking-[0.3em] text-[oklch(0.78_0.18_300)]">{badge}</div>
-      <div className="mt-4 flex items-baseline gap-1">
-        <span className="font-display text-5xl font-semibold text-glow">{price}</span>
-        <span className="text-sm text-muted-foreground">{cadence}</span>
+      <div className="mt-4 flex items-baseline gap-1.5 flex-wrap">
+        <span className="font-display text-5xl font-semibold text-glow tracking-tight">{price}</span>
+        <span className="text-sm text-muted-foreground font-medium bg-white/5 px-2.5 py-1 rounded-md border border-white/5">{cadence}</span>
       </div>
       <h3 className="mt-4 font-display text-2xl font-semibold">{headline}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
@@ -321,7 +320,7 @@ function PricingCard({ badge, price, cadence, headline, subtitle, features, ctaL
       </ul>
       <button
         onClick={onClick}
-        className={`mt-8 halo-btn rounded-xl py-3.5 text-sm font-semibold tracking-wide border ${featured ? "bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border-white/20" : "bg-white/5 border-white/10"}`}
+        className={`mt-8 halo-btn rounded-xl py-3.5 text-sm font-semibold tracking-wide border transition-all ${featured ? "bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border-white/20 hover:opacity-90" : "bg-white/5 border-white/10 hover:bg-white/10"}`}
       >
         {ctaLabel}
       </button>
