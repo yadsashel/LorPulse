@@ -222,7 +222,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                       value={formData.city}
                       onChange={handleInputChange}
                       className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
-                      placeholder="e.g., San Francisco, London"
+                      placeholder="e.g., USA, UK, UAE, Global"
                     />
                   </div>
 
