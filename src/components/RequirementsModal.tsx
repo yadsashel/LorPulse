@@ -11,18 +11,17 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     email: "",
     niche: "",
     city: "",
-    subjectLine: "",
   });
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState<"details" | "payment">("details");
   
-  // 🔄 تتبع حالة الـ Background Crawler والتقدم لايف
+  // 🔄 Live Background Crawler Tracking Progress
   const [progress, setProgress] = useState(0);
   const [loadingStatusText, setLoadingStatusText] = useState("Touring Web Corridors...");
 
-  // 🔐 ساروت الأدمن السري (Unlimited Free Owner Access)
+  // 🔐 Hidden Admin Bypass (Unlimited Free Owner Access)
   const [isOwnerMode, setIsOwnerMode] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
@@ -50,12 +49,11 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     const valid =
       updatedForm.email.includes("@") &&
       updatedForm.niche.trim() !== "" &&
-      updatedForm.city.trim() !== "" &&
-      updatedForm.subjectLine.trim() !== "";
+      updatedForm.city.trim() !== "";
     setIsFormValid(valid);
   };
 
-  // 📥 الفانكشن السحرية د الـ Polling: كتعرف السيرفر فين وصل وكتنزّل الـ CSV غير يسالي
+  // 📥 Live Polling Loop: Checks server status every 4 seconds and triggers auto-download on completion
   const startPollingCampaign = (campaignId: number) => {
     const interval = setInterval(async () => {
       try {
@@ -68,19 +66,17 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           setProgress(data.progress);
           setLoadingStatusText(`Extracting B2B Corporate Leads: ${data.progress}%`);
         } 
-        
         else if (data.status === "completed") {
           setProgress(100);
           setLoadingStatusText("✅ Compilation 100% Complete! Triggering auto-download...");
           clearInterval(interval);
           
-          // تنزيل تلقائي ف الحين من رابط السيرفر المباشر
+          // Force immediate browser download from server endpoint
           window.location.href = `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/download`;
           
           setSuccess(true);
           setLoading(false);
         } 
-        
         else if (data.status === "failed") {
           clearInterval(interval);
           setLoading(false);
@@ -89,10 +85,10 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
       } catch (err) {
         console.error("Polling sync lost:", err);
       }
-    }, 4000); // كيسول الباكيند كل 4 ثواني
+    }, 4000);
   };
 
-  // 🚀 تشغيل الـ Pipeline للأدمن فابور (بالـ Background Task الجديدة)
+  // 🚀 Trigger pipeline instantly for the admin (Free bypass)
   const triggerOwnerBypass = async () => {
     setLoading(true);
     setProgress(5);
@@ -106,14 +102,12 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
-          email_subject_line: formData.subjectLine,
           paypal_order_id: `OWNER_ASYNC_HUNT_${Date.now()}`
         })
       });
 
       if (response.status === 202) {
         const data = await response.json();
-        // البدء ف مراقبة السيرفر لايف حيت الخدمة بدات ف الخلفية
         startPollingCampaign(data.campaign_id);
       } else {
         alert("Extraction loop encountered an error on the Hugging Face node.");
@@ -126,40 +120,12 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }
   };
 
-  // 💳 معالجة الدفع الحقيقي للكليان وتفعيل الـ Tracking لايف
+  // 💳 Handle real client payment success and safely spin backend thread
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
     setProgress(5);
     setLoadingStatusText("Verifying capture & spawning extraction threads...");
     try {
-      const hollywoodEmailTemplate = `
-Subject: Hand-extracted B2B data pipeline for ${formData.niche} (50 free verified records inside)
-
-Hi Founder/CEO,
-
-Most people send cold emails looking for a meeting. I’m sending you this because I’ve already done a part of your team's job today.
-
-I ran your ecosystem through our autonomous intelligence pipeline, LorPulse. Based on your core focus in ${formData.niche}, our system bypassed the standard internet noise to map out high-intent prospects ready to buy in the next 30 days.
-
-Instead of telling you how good our data is, here are your first 50 verified decision-maker leads for free—hand-enriched with 14 unique data points (including exact tech stack, company headcount, and verified corporate structure):
-
-👉 [YOUR CUSTOM 50 FREE LEADS GOOGLE SHEET LINK DISPATCHED]
-
-Why should you trust this data?
-- Triple-Validated: SMTP and catch-all filtering guarantee a 98.4% deliverability rate.
-- Intent-Driven: Scored 0–100 based on active hiring spikes and funding signals.
-
-Our pipeline currently holds the remaining 450 highly specialized leads matching this exact quality blueprint, ready for instant download.
-
-We are currently onboarding operators into our Private Beta. You can unlock the full dataset of 500 leads right now for a one-time activation of just $5 (No subscriptions, no hidden fees).
-
-Check the 50 free contacts first. If they match your standards, grab the remaining 450 here:
-🔗 lorpulse.vercel.app
-
-To your next close,
-LorPulse Operator Core
-      `;
-
       const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,15 +134,12 @@ LorPulse Operator Core
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
-          email_subject_line: formData.subjectLine,
-          paypal_order_id: orderId,
-          hollywood_template: hollywoodEmailTemplate
+          paypal_order_id: orderId
         })
       });
 
       if (response.status === 202) {
         const data = await response.json();
-        // ربط المتصفح مع السيرفر لايف حيت الدفع داز والـ Task بدات
         startPollingCampaign(data.campaign_id);
       } else {
         alert("Payment verified, but server pipeline initialization failed. Support notified.");
@@ -235,7 +198,7 @@ LorPulse Operator Core
                     <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Target City / Geo-Location</label>
                     <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., San Francisco, London" />
                   </div>
-              
+
                   <button
                     disabled={!isFormValid}
                     onClick={() => {
@@ -292,7 +255,9 @@ LorPulse Operator Core
                         try {
                           setLoading(true);
                           const details = await actions.order.capture();
-                          await handleClientPaymentSuccess(details.id);
+                          if (details && details.id) {
+                            await handleClientPaymentSuccess(details.id);
+                          }
                         } catch (error) {
                           console.error("PayPal Capture Error:", error);
                           alert("Transaction execution failed during network sync. Please retry.");
@@ -330,9 +295,8 @@ LorPulse Operator Core
               {loadingStatusText}
             </div>
             
-            {/* 📊 بار متحرك وجميل يعبر عن الـ Progress الحقيقي اللي جاي من السيرفر */}
             {progress > 0 && (
-              <div className="w-48 bg-zinc-900 h-1.5 rounded-full mt-4 overflow-hidden border border-zinc-850">
+              <div className="w-48 bg-zinc-900 h-1.5 rounded-full mt-4 overflow-hidden border border-zinc-800">
                 <div 
                   className="bg-purple-500 h-1.5 rounded-full transition-all duration-300" 
                   style={{ width: `${progress}%` }}
