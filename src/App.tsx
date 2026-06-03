@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom"; // 👈 زدت هادي هنا
 import { SiteShell } from "@/components/SiteShell";
 import { Reveal } from "@/components/Reveal";
 import { RequirementsModal } from "@/components/RequirementsModal";
@@ -144,7 +145,8 @@ export default function App() {
                 <button onClick={() => setModal("horizon")} className="halo-btn rounded-xl px-6 py-3 text-sm font-semibold bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border border-white/15">
                   Join Horizon Beta
                 </button>
-                <a href="/contact" className="halo-btn rounded-xl px-6 py-3 text-sm font-medium glass">Custom Requirements →</a>
+                {/* 👇 هاد البوتون رجعتو <Link> وطريقو نقية دابا */}
+                <Link to="/contact" className="halo-btn rounded-xl px-6 py-3 text-sm font-medium glass">Custom Requirements →</Link>
               </div>
             </div>
           </Reveal>

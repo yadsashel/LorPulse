@@ -235,11 +235,7 @@ LorPulse Operator Core
                     <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Target City / Geo-Location</label>
                     <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., San Francisco, London" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Cold Email Subject Line Reference</label>
-                    <input type="text" name="subjectLine" value={formData.subjectLine} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., Quick question regarding your scaling..." />
-                  </div>
-
+              
                   <button
                     disabled={!isFormValid}
                     onClick={() => {
