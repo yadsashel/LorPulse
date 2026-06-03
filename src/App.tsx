@@ -110,7 +110,7 @@ export default function App() {
                   <p className="text-sm text-muted-foreground">Tell us your niche and country. Our pipeline scrapes, validates, enriches, and delivers 500 decision-maker contacts in CSV — straight to your browser and inbox.</p>
                   <div className="mt-auto inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs">
                     <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.18_300)] animate-pulseGlow" />
-                    One-time · $7 · Instant delivery
+                    One-time · $10 · Instant delivery
                   </div>
                 </div>
               </Reveal>
@@ -203,7 +203,7 @@ export default function App() {
                     "Live scraped, deduplicated & cleaned",
                     "Instant browser CSV download + email backup",
                   ]}
-                  ctaLabel="LAUNCH PIPELINE — $7"
+                  ctaLabel="LAUNCH PIPELINE — $10"
                   onClick={() => setModal("core")}
                 />
               </Reveal>
