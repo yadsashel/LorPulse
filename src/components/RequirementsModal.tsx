@@ -182,7 +182,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                 </h3>
 
                 <p className="text-xs text-zinc-400 mt-1 mb-6">
-                  Pulse Core Plan — One-time activation fee of $7.
+                  Pulse Core Plan — One-time activation fee of $10.
                 </p>
 
                 <div className="space-y-4">
@@ -258,7 +258,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                     <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">
                       Pay LorPulse
                     </div>
-                    <h4 className="text-3xl font-bold text-white tracking-tight">$7.00</h4>
+                    <h4 className="text-3xl font-bold text-white tracking-tight">$10.00</h4>
 
                     <div className="mt-6 space-y-3 bg-zinc-900/40 border border-zinc-900 p-4 rounded-xl text-xs">
                       <div className="flex justify-between">
@@ -300,7 +300,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                         return actions.order.create({
                           purchase_units: [
                             {
-                              amount: { value: "7.00" },
+                              amount: { value: "10.00" },
                               description: `LorPulse Core: 500 ${formData.niche} Leads`,
                             },
                           ],
