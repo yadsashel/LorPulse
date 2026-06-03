@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; // 👈 زدت هادي هنا
+import { Link, useNavigate } from "react-router-dom"; // 👈 زدنا useNavigate هنا
 import { SiteShell } from "@/components/SiteShell";
 import { Reveal } from "@/components/Reveal";
 import { RequirementsModal } from "@/components/RequirementsModal";
@@ -9,8 +9,9 @@ import logo from "@/assets/lorpulse-logo.png";
 const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
 export default function App() {
-  const [modal, setModal] = useState<null | "core" | "horizon">(null);
+  const [modal, setModal] = useState<null | "core">(null); // 👈 حيدنا horizon من الـ state
   const [y, setY] = useState(0);
+  const navigate = useNavigate(); // 👈 هوك ديال النافيغاسيون ديريكت
 
   useEffect(() => {
     const onScroll = () => setY(window.scrollY);
@@ -116,21 +117,52 @@ export default function App() {
               <div className="text-center max-w-2xl mx-auto mb-14">
                 <p className="text-xs uppercase tracking-[0.3em] text-[oklch(0.78_0.18_300)]">Pricing</p>
                 <h2 className="mt-3 font-display text-4xl sm:text-5xl font-semibold">Two ways to ignite the pipeline.</h2>
-                <p className="mt-4 text-muted-foreground">Specialized datasets on demand, or a forever-on extraction loop.</p>
+                <p className="mt-4 text-muted-foreground">Specialized datasets on demand, or custom autonomous engineering.</p>
               </div>
             </Reveal>
 
             <div className="grid md:grid-cols-2 gap-5">
               <Reveal>
-                <PricingCard badge="Pulse Core" price="$5" cadence="one-time" headline="500 Verified Leads, On Demand." subtitle="500 Verified B2B Leads, targeted to any niche and city worldwide." features={["Exactly 500 verified B2B emails","Any niche & city in the world","One-time curated dataset","Instant CSV download via email","Live scraped and verified"]} ctaLabel="HUNT FOR $5" onClick={() => setModal("core")} />
+                <PricingCard 
+                  badge="Pulse Core" 
+                  price="$7" 
+                  cadence="one-time" 
+                  headline="500 Verified Leads, Guaranteed." 
+                  subtitle="Target any niche across any country or region worldwide. No empty files, zero dead rows." 
+                  features={[
+                    "Exactly 500 Verified B2B Emails",
+                    "Target Any Niche + Country/Region",
+                    "Smart Auto-Fill Guarantee (AI Expansion)",
+                    "Live Scraped & Cleaned (No Placeholders)",
+                    "Instant Browser CSV Download"
+                  ]} 
+                  ctaLabel="HUNT FOR $7" 
+                  onClick={() => setModal("core")} 
+                />
               </Reveal>
               <Reveal delay={100}>
-                <PricingCard featured badge="Pulse Horizon" price="$24" cadence="/month" headline="Forever Leads Pipeline." subtitle="Recurring live data extraction + automated personalization tool." features={["Weekly fresh leads delivery","Live intent tracker dashboard","Unlimited niche searches","AI personalization loop — {First_Name}, {Company_Name}","Priority pipeline support"]} ctaLabel="Coming Soon" onClick={() => setModal("horizon")} />
+                <PricingCard 
+                  featured 
+                  badge="Custom Automation" 
+                  price="Custom" 
+                  cadence="Quotes" 
+                  headline="Build Custom AI & Systems." 
+                  subtitle="SaaS, dashboards, scraping bots, autonomous agents, and tailor-made workflows built for your business needs." 
+                  features={[
+                    "Custom AI Agents & Chatbots Development",
+                    "Full-Stack SaaS platforms & Dashboards",
+                    "Advanced Custom Web Scraping Workflows",
+                    "Tailored exactly to your business logic",
+                    "Dedicated elite development & architecture support"
+                  ]} 
+                  ctaLabel="BUILD YOUR PIPELINE" 
+                  onClick={() => navigate("/contact")} // 👈 كيدي ديريكت لصفحة الكونطاكط بلا تضيع الوقت
+                />
               </Reveal>
             </div>
 
             <Reveal delay={200}>
-              <p className="text-center text-xs text-muted-foreground mt-8">Every CTA opens a requirements form — used to onboard you to our private beta list.</p>
+              <p className="text-center text-xs text-muted-foreground mt-8">Every pipeline request inside Core initiates a dynamic async execution block.</p>
             </Reveal>
           </div>
         </section>
@@ -140,19 +172,19 @@ export default function App() {
             <div className="mx-auto max-w-5xl glass-strong halo rounded-3xl px-8 py-14 text-center relative overflow-hidden">
               <div className="absolute -inset-px rounded-3xl pointer-events-none bg-[radial-gradient(600px_200px_at_50%_-20%,rgba(168,120,255,0.35),transparent)]" />
               <h3 className="font-display text-3xl sm:text-4xl font-semibold">Ready to outpace the noise?</h3>
-              <p className="mt-3 text-muted-foreground max-w-xl mx-auto">Tell us your niche. We'll deliver your first enriched dataset preview within 24 hours.</p>
+              <p className="mt-3 text-muted-foreground max-w-xl mx-auto">Tell us your niche or your automation bottleneck. We'll deploy your solution immediately.</p>
               <div className="mt-7 flex justify-center gap-3 flex-wrap">
-                <button onClick={() => setModal("horizon")} className="halo-btn rounded-xl px-6 py-3 text-sm font-semibold bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border border-white/15">
-                  Join Horizon Beta
-                </button>
-                {/* 👇 هاد البوتون رجعتو <Link> وطريقو نقية دابا */}
+                {/* 👇 هادي حتى هي رجعناها كتلوح للكونطاكط ديريكت */}
+                <Link to="/contact" className="halo-btn rounded-xl px-6 py-3 text-sm font-semibold bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border border-white/15">
+                  Build Custom Automation
+                </Link>
                 <Link to="/contact" className="halo-btn rounded-xl px-6 py-3 text-sm font-medium glass">Custom Requirements →</Link>
               </div>
             </div>
           </Reveal>
         </section>
 
-        {modal && <RequirementsModal plan={modal} onClose={() => setModal(null)} />}
+        {modal === "core" && <RequirementsModal plan="core" onClose={() => setModal(null)} />}
       </SiteShell>
     </PayPalScriptProvider>
   );
@@ -180,7 +212,7 @@ function PricingCard({ badge, price, cadence, headline, subtitle, features, ctaL
     <div className={`relative rounded-3xl p-8 halo h-full flex flex-col ${featured ? "glass-strong border-[oklch(0.55_0.24_305)]/40" : "glass"}`}>
       {featured && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] tracking-[0.25em] uppercase bg-gradient-to-r from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border border-white/15">
-          Most Popular
+          High Ticket Tier
         </div>
       )}
       <div className="text-xs uppercase tracking-[0.3em] text-[oklch(0.78_0.18_300)]">{badge}</div>

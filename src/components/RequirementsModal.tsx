@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { PayPalButtons } from "@paypal/react-paypal-js";
 
 interface RequirementsModalProps {
-  plan: "core" | "horizon";
+  plan: "core";
   onClose: () => void;
 }
 
-export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
+export function RequirementsModal({ onClose }: RequirementsModalProps) {
   const [formData, setFormData] = useState({
     email: "",
     niche: "",
@@ -16,7 +16,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState<"details" | "payment">("details");
-  
+
   // 🔄 Live Background Crawler Tracking Progress
   const [progress, setProgress] = useState(0);
   const [loadingStatusText, setLoadingStatusText] = useState("Touring Web Corridors...");
@@ -53,11 +53,13 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     setIsFormValid(valid);
   };
 
-  // 📥 Live Polling Loop: Checks server status every 4 seconds and triggers auto-download on completion
+  // 📥 Live Polling Loop
   const startPollingCampaign = (campaignId: number) => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/status`);
+        const res = await fetch(
+          `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/status`
+        );
         if (!res.ok) return;
 
         const data = await res.json();
@@ -65,19 +67,14 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
         if (data.status === "processing") {
           setProgress(data.progress);
           setLoadingStatusText(`Extracting B2B Corporate Leads: ${data.progress}%`);
-        } 
-        else if (data.status === "completed") {
+        } else if (data.status === "completed") {
           setProgress(100);
           setLoadingStatusText("✅ Compilation 100% Complete! Triggering auto-download...");
           clearInterval(interval);
-          
-          // Force immediate browser download from server endpoint
           window.location.href = `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/download`;
-          
           setSuccess(true);
           setLoading(false);
-        } 
-        else if (data.status === "failed") {
+        } else if (data.status === "failed") {
           clearInterval(interval);
           setLoading(false);
           alert("🚨 Pipeline extraction hit a wall for this specific criteria. Verify your niche string.");
@@ -88,7 +85,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }, 4000);
   };
 
-  // 🚀 Trigger pipeline instantly for the admin (Free bypass)
+  // 🚀 Owner bypass
   const triggerOwnerBypass = async () => {
     setLoading(true);
     setProgress(5);
@@ -102,8 +99,8 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
-          paypal_order_id: `OWNER_ASYNC_HUNT_${Date.now()}`
-        })
+          paypal_order_id: `OWNER_ASYNC_HUNT_${Date.now()}`,
+        }),
       });
 
       if (response.status === 202) {
@@ -120,7 +117,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }
   };
 
-  // 💳 Handle real client payment success and safely spin backend thread
+  // 💳 Real client payment success
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
     setProgress(5);
@@ -134,8 +131,8 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
-          paypal_order_id: orderId
-        })
+          paypal_order_id: orderId,
+        }),
       });
 
       if (response.status === 202) {
@@ -152,51 +149,81 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }
   };
 
-  if (plan === "horizon") {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div className="relative w-full max-w-md bg-zinc-950 border border-zinc-800 p-8 rounded-3xl text-center shadow-2xl animate-fadeIn">
-          <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm">✕</button>
-          <div className="inline-flex items-center gap-2 rounded-full bg-purple-500/10 px-3 py-1 text-xs text-purple-400 mb-4">Pulse Horizon</div>
-          <h3 className="font-display text-2xl font-semibold text-white">Horizon Extraction Loop</h3>
-          <p className="mt-3 text-sm text-zinc-400">The recurring live data extraction dashboard and AI loop automation is currently in private deployment.</p>
-          <div className="mt-6 bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-xs text-yellow-500">🚀 Setting up infrastructure. Access expands next week!</div>
-          <button onClick={onClose} className="mt-6 w-full bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl py-3 text-sm font-semibold transition-all">Close Window</button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[95vh] ${step === "payment" ? "max-w-4xl" : "max-w-md"}`}>
-        
-        <button onClick={onClose} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10">✕</button>
+      <div
+        className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[95vh] ${
+          step === "payment" ? "max-w-4xl" : "max-w-md"
+        }`}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10"
+        >
+          ✕
+        </button>
 
         {!success ? (
           <>
             {step === "details" ? (
               <div className="animate-fadeIn">
-                <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">Onboarding Setup</div>
-                
-                <h3 onClick={handleSecretClick} className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none">
-                  Configure Your Pipeline {isOwnerMode && <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async)</span>}
+                <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
+                  Onboarding Setup
+                </div>
+
+                <h3
+                  onClick={handleSecretClick}
+                  className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none"
+                >
+                  Configure Your Pipeline{" "}
+                  {isOwnerMode && (
+                    <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async)</span>
+                  )}
                 </h3>
-                
-                <p className="text-xs text-zinc-400 mt-1 mb-6">Pulse Core Plan — One-time activation fee of $5.</p>
+
+                <p className="text-xs text-zinc-400 mt-1 mb-6">
+                  Pulse Core Plan — One-time activation fee of $7.
+                </p>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Your Delivery Email</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="operator@agency.com" />
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">
+                      Your Delivery Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
+                      placeholder="operator@agency.com"
+                    />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Target Niche / Industry Corridor</label>
-                    <input type="text" name="niche" value={formData.niche} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., Series-A SaaS, Dubai Real Estate" />
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">
+                      Target Niche / Industry Corridor
+                    </label>
+                    <input
+                      type="text"
+                      name="niche"
+                      value={formData.niche}
+                      onChange={handleInputChange}
+                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
+                      placeholder="e.g., Series-A SaaS, Dubai Real Estate"
+                    />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">Target City / Geo-Location</label>
-                    <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600" placeholder="e.g., San Francisco, London" />
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">
+                      Target City / Geo-Location
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
+                      placeholder="e.g., San Francisco, London"
+                    />
                   </div>
 
                   <button
@@ -208,7 +235,11 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                         setStep("payment");
                       }
                     }}
-                    className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${isFormValid ? "bg-white text-black hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5" : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"}`}
+                    className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${
+                      isFormValid
+                        ? "bg-white text-black hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5"
+                        : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"
+                    }`}
                   >
                     {isOwnerMode ? "Execute Async Owner Extraction ⚡" : "Proceed to Secure Checkout"}
                   </button>
@@ -218,17 +249,38 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
                 <div className="md:col-span-4 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
-                    <button onClick={() => setStep("details")} className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors">
+                    <button
+                      onClick={() => setStep("details")}
+                      className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors"
+                    >
                       ← Edit info
                     </button>
-                    <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">Pay LorPulse</div>
-                    <h4 className="text-3xl font-bold text-white tracking-tight">$5.00</h4>
-                    
+                    <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">
+                      Pay LorPulse
+                    </div>
+                    <h4 className="text-3xl font-bold text-white tracking-tight">$7.00</h4>
+
                     <div className="mt-6 space-y-3 bg-zinc-900/40 border border-zinc-900 p-4 rounded-xl text-xs">
-                      <div className="flex justify-between"><span className="text-zinc-500">Pipeline:</span> <span className="text-zinc-300 font-medium">Pulse Core</span></div>
-                      <div className="flex justify-between"><span className="text-zinc-500">Niche:</span> <span className="text-zinc-300 truncate max-w-[100px] font-medium">{formData.niche}</span></div>
-                      <div className="flex justify-between"><span className="text-zinc-500">Target:</span> <span className="text-zinc-300 font-medium">{formData.city}</span></div>
-                      <div className="flex justify-between"><span className="text-zinc-500">Delivery:</span> <span className="text-zinc-300 truncate max-w-[100px] font-medium">{formData.email}</span></div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">Pipeline:</span>
+                        <span className="text-zinc-300 font-medium">Pulse Core</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">Niche:</span>
+                        <span className="text-zinc-300 truncate max-w-[100px] font-medium">
+                          {formData.niche}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">Target:</span>
+                        <span className="text-zinc-300 font-medium">{formData.city}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">Delivery:</span>
+                        <span className="text-zinc-300 truncate max-w-[100px] font-medium">
+                          {formData.email}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="text-[10px] text-zinc-600 mt-6 hidden md:block">
@@ -237,17 +289,21 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                 </div>
 
                 <div className="md:col-span-8 flex flex-col justify-start w-full min-h-[400px]">
-                  <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4 px-1">Select Payment Method</h4>
-                  
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4 px-1">
+                    Select Payment Method
+                  </h4>
+
                   <div className="w-full block overflow-visible px-1">
                     <PayPalButtons
                       style={{ layout: "vertical", color: "black", shape: "rect", label: "pay" }}
                       createOrder={(_, actions) => {
                         return actions.order.create({
-                          purchase_units: [{
-                            amount: { value: "5.00" },
-                            description: `LorPulse Core: 500 ${formData.niche} Leads`
-                          }]
+                          purchase_units: [
+                            {
+                              amount: { value: "7.00" },
+                              description: `LorPulse Core: 500 ${formData.niche} Leads`,
+                            },
+                          ],
                         });
                       }}
                       onApprove={async (_, actions) => {
@@ -277,12 +333,14 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
               {isOwnerMode ? "Extraction Complete!" : "Pipeline Dispatched Instantly!"}
             </h3>
             <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
-              {isOwnerMode 
+              {isOwnerMode
                 ? `The compiled CSV dataset for ${formData.niche} has been automatically downloaded to your local drive.`
-                : `Success! Your 500 hyper-verified B2B leads file has been downloaded directly inside your browser. Concurrently, the structured confirmation and fallback download link have been dispatched to your email at ${formData.email} via Brevo.`
-              }
+                : `Success! Your 500 hyper-verified B2B leads file has been downloaded directly inside your browser. Concurrently, the structured confirmation and fallback download link have been dispatched to your email at ${formData.email} via Brevo.`}
             </p>
-            <button onClick={onClose} className="mt-8 w-full bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 rounded-xl py-3 text-sm font-semibold transition-all">
+            <button
+              onClick={onClose}
+              className="mt-8 w-full bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 rounded-xl py-3 text-sm font-semibold transition-all"
+            >
               Return to Operator Dashboard
             </button>
           </div>
@@ -294,18 +352,19 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
             <div className="text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse">
               {loadingStatusText}
             </div>
-            
+
             {progress > 0 && (
               <div className="w-48 bg-zinc-900 h-1.5 rounded-full mt-4 overflow-hidden border border-zinc-800">
-                <div 
-                  className="bg-purple-500 h-1.5 rounded-full transition-all duration-300" 
+                <div
+                  className="bg-purple-500 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             )}
-            
+
             <p className="text-xs text-zinc-500 max-w-xs mt-3">
-              Bypassing noise filters. Compiling specialized rows asynchronously to eliminate client-side connection timeouts.
+              Bypassing noise filters. Compiling specialized rows asynchronously to eliminate
+              client-side connection timeouts.
             </p>
           </div>
         )}
