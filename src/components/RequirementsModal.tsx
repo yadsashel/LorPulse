@@ -6,37 +6,27 @@ interface RequirementsModalProps {
   onClose: () => void;
 }
 
-interface UserAccount {
-  exists: boolean;
-  email: string;
-  credits: number;
-  name?: string;
-}
-
-export function RequirementsModal({ onClose }: RequirementsModalProps) {
-  // 🧭 System Steps: "email_check" | "details" | "payment"
-  const [step, setStep] = useState<"email_check" | "details" | "payment">("email_check");
-  
+export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [formData, setFormData] = useState({
     email: "",
     niche: "",
     city: "",
   });
-
-  const [accountInfo, setAccountInfo] = useState<UserAccount | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState<"details" | "scan_preview" | "payment">("details");
 
-  // 🔄 Live Background Progress Tracker
+  // 🔄 Live Background Crawler Tracking Progress
   const [progress, setProgress] = useState(0);
   const [loadingStatusText, setLoadingStatusText] = useState("Touring Web Corridors...");
   
-  // 📈 Dynamic Metered Billing States ($0.014 / Lead)
+  // 📈 Dynamic Pricing States (Pay-as-you-go: $0.014 / Lead)
   const [detectedLeads, setDetectedLeads] = useState(0);
   const [dynamicPrice, setDynamicPrice] = useState("0.00");
+  const [backendCampaignId, setBackendCampaignId] = useState<number | null>(null);
 
-  // 🔐 Hidden Admin Bypass (5 clicks on headers logs absolute owner status)
+  // 🔐 Hidden Admin Bypass (Unlimited Free Owner Access)
   const [isOwnerMode, setIsOwnerMode] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
@@ -53,59 +43,6 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
       localStorage.setItem("lorpulse_owner_access", "true");
       setIsOwnerMode(true);
       alert("⚡ Owner Privilege Engaged. Background async tracking activated.");
-      setStep("details");
-    }
-  };
-
-  // 🔍 Check Database for Existing User Account Records
-  const checkEmailDatabase = async () => {
-    if (!formData.email.includes("@")) {
-      alert("Please enter a valid email address.");
-      return;
-    }
-
-    setLoading(true);
-    setLoadingStatusText("Checking credentials into the database...");
-    setProgress(35);
-
-    try {
-      const response = await fetch(
-        `https://lorpulse-lorpusle-backend.hf.space/api/user/check?email=${encodeURIComponent(formData.email)}`
-      );
-      
-      setProgress(75);
-      
-      if (response.ok) {
-        const data: UserAccount = await response.json();
-        
-        if (data.exists) {
-          setAccountInfo(data);
-          setLoadingStatusText(`Welcome back, ${data.name || "Operator"}! Loading workspace configuration...`);
-          setProgress(100);
-          setTimeout(() => {
-            setStep("details");
-            setLoading(false);
-          }, 1000);
-        } else {
-          setLoading(false);
-          alert("This email does not exist. Please register first.");
-        }
-      } else {
-        // Fallback for sandboxed offline client testing
-        setTimeout(() => {
-          if (isOwnerMode || formData.email.toLowerCase().includes("owner")) {
-            setAccountInfo({ exists: true, email: formData.email, credits: 777, name: "System Architect" });
-            setStep("details");
-          } else {
-            alert("No subscriber identity found. Please register to use the pipeline.");
-          }
-          setLoading(false);
-        }, 1200);
-      }
-    } catch (error) {
-      console.error("Handshake lost:", error);
-      setLoading(false);
-      alert("Database interaction failed. Check Hugging Face instance endpoints.");
     }
   };
 
@@ -121,7 +58,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     setIsFormValid(valid);
   };
 
-  // 📥 Async Campaign Lead Extractor Loop Poller
+  // 📥 Live Polling Loop for Completion & Download
   const startPollingCampaign = (campaignId: number) => {
     const interval = setInterval(async () => {
       try {
@@ -145,7 +82,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         } else if (data.status === "failed") {
           clearInterval(interval);
           setLoading(false);
-          alert("🚨 Pipeline extraction hit a wall for this specific criteria.");
+          alert("🚨 Pipeline extraction hit a wall for this specific criteria. Verify your niche string.");
         }
       } catch (err) {
         console.error("Polling sync lost:", err);
@@ -153,18 +90,21 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     }, 4000);
   };
 
-  // 🔎 Simulated Scanner Metrics Before Checkout Layout
+  // 🔍 Simulated or Initial Server Scan to find out how many leads exist
   const launchLiveLeadScan = async () => {
     setLoading(true);
     setProgress(20);
     setLoadingStatusText("Initializing Local Extractor Nodes...");
     
+    // محاكاة سريعة ومثيرة للـ Live Scan قبل الدفع باش الكليان يشوف النتيجة ويتحمس
     setTimeout(() => {
       setProgress(60);
       setLoadingStatusText(`Mapping data corridors for "${formData.niche}"...`);
       
       setTimeout(() => {
+        // توليد عدد عشوائي ذكي بين 400 و 950 حبة (كيمثل الواقع)
         const leads = Math.floor(Math.random() * (950 - 400 + 1)) + 400;
+        // الحسبة الدقيقة: $0.014 لكل Lead مع سقف أقصى $14.00
         const rawPrice = leads * 0.014;
         const finalPrice = Math.min(rawPrice, 14.00).toFixed(2);
         
@@ -176,7 +116,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     }, 1200);
   };
 
-  // ⚡ Owner Admin Pipeline Auto-Bypass Trigger
+  // 🚀 Owner bypass
   const triggerOwnerBypass = async () => {
     setLoading(true);
     setProgress(5);
@@ -186,7 +126,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          plan_type: "core",
+          plan_type: plan,
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
@@ -203,11 +143,12 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
       }
     } catch (error) {
       console.error("Owner pipeline execution failed:", error);
+      alert("Network connection error. Check Hugging Face instance logs.");
       setLoading(false);
     }
   };
 
-  // 💳 Direct Customer Checkout Capture Pipeline Influx
+  // 💳 Real client payment success
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
     setProgress(5);
@@ -217,7 +158,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          plan_type: "core",
+          plan_type: plan,
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
@@ -229,11 +170,12 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         const data = await response.json();
         startPollingCampaign(data.campaign_id);
       } else {
-        alert("Payment verified, but server pipeline initialization failed.");
+        alert("Payment verified, but server pipeline initialization failed. Support notified.");
         setLoading(false);
       }
     } catch (error) {
       console.error("Client pipeline injection failed:", error);
+      alert("Network error synchronization. The server will deliver via Brevo email backup.");
       setLoading(false);
     }
   };
@@ -254,23 +196,24 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
 
         {!success ? (
           <>
-            {/* STEP 1: DATABASE CHECK */}
-            {step === "email_check" && (
+            {step === "details" ? (
               <div className="animate-fadeIn">
                 <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
-                  Pipeline Identity Check
+                  Onboarding Setup
                 </div>
+
                 <h3
                   onClick={handleSecretClick}
                   className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none"
                 >
-                  Verify Access Requirements {" "}
+                  Configure Pipeline{" "}
                   {isOwnerMode && (
-                    <span className="text-emerald-400 text-xs ml-1">● Owner Verified</span>
+                    <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async)</span>
                   )}
                 </h3>
+
                 <p className="text-xs text-zinc-400 mt-1 mb-6">
-                  Please confirm your subscriber registration email address to check your balance and activate nodes.
+                  Pulse Core Plan — Metered Pricing ($0.014 / verified lead, max cap $14.00).
                 </p>
 
                 <div className="space-y-4">
@@ -287,41 +230,6 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                       placeholder="operator@agency.com"
                     />
                   </div>
-                  <button
-                    onClick={checkEmailDatabase}
-                    className="mt-2 w-full py-3.5 bg-white text-black font-semibold rounded-xl text-sm tracking-wide transition-all duration-200 hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5"
-                  >
-                    Check Account Registry →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 2: DETAILS ENTRY CONFIGURATION */}
-            {step === "details" && (
-              <div className="animate-fadeIn">
-                <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
-                  Onboarding Setup
-                </div>
-
-                <h3
-                  onClick={handleSecretClick}
-                  className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none"
-                >
-                  Configure Pipeline{" "}
-                  {isOwnerMode && (
-                    <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async Bypass)</span>
-                  )}
-                </h3>
-
-                {accountInfo && (
-                  <div className="mt-3 text-xs text-purple-300 bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
-                    ✨ Welcome back, <span className="font-bold text-white">{accountInfo.name || "Operator"}</span>! 
-                    Your account has <span className="font-bold text-white font-mono">{accountInfo.credits}</span> remaining credits.
-                  </div>
-                )}
-
-                <div className="space-y-4 mt-5">
                   <div>
                     <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">
                       Target Niche / Industry Corridor
@@ -345,7 +253,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                       value={formData.city}
                       onChange={handleInputChange}
                       className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
-                      placeholder="e.g., USA, UK, San Francisco"
+                      placeholder="e.g., USA, UK, San Francisco, London"
                     />
                   </div>
 
@@ -368,10 +276,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                   </button>
                 </div>
               </div>
-            )}
-
-            {/* STEP 3: BILLING TOTAL & PAYMENT SYSTEMS */}
-            {step === "payment" && (
+            ) : (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
                 <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
@@ -379,7 +284,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                       onClick={() => setStep("details")}
                       className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors"
                     >
-                      ← Edit details
+                      ← Edit info
                     </button>
                     <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">
                       Metered Invoice Total
@@ -470,7 +375,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
             <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
               {isOwnerMode
                 ? `The compiled CSV dataset for ${formData.niche} has been automatically downloaded to your local drive.`
-                : `Success! Your specialized dataset containing ${detectedLeads} hyper-verified B2B leads has been unlocked and downloaded directly inside your browser. Concurrently, a secure link and backup copy have been dispatched to ${formData.email}.`}
+                : `Success! Your specialized dataset containing ${detectedLeads} hyper-verified B2B leads has been unlocked and downloaded directly inside your browser. Concurrently, a secure link and backup copy have been dispatched to ${formData.email} via Brevo.`}
             </p>
             <button
               onClick={onClose}
@@ -481,7 +386,6 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
           </div>
         )}
 
-        {/* LOADING OVERLAY MASK */}
         {loading && (
           <div className="absolute inset-0 bg-black/95 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-50 animate-fadeIn">
             <div className="h-6 w-6 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
