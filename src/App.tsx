@@ -73,9 +73,9 @@ export default function App() {
               <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   ["98.4%", "Email deliverability"],
-                  ["Up to 1k", "Leads per batch"], // 🔥 ردينالها تل لـ 1000 حبة كحد أقصى
+                  ["5,000", "Runtime Credit Pool"],
                   ["12k+", "Niches mapped"],
-                  ["Dynamic", "Pay-as-you-go price"], // 🔥 تبيان التسعير الديناميكي من الدخلة
+                  ["$10 Flat", "Pay once and for all"],
                 ].map(([k, v]) => (
                   <div key={v} className="glass halo rounded-2xl px-5 py-5 text-left">
                     <div className="font-display text-2xl text-glow">{k}</div>
@@ -110,7 +110,7 @@ export default function App() {
                   <p className="text-sm text-muted-foreground">Tell us your niche and country. Our pipeline scrapes, validates, enriches, and delivers decision-maker contacts in CSV — straight to your browser and inbox.</p>
                   <div className="mt-auto inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs">
                     <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.18_300)] animate-pulseGlow" />
-                    Metered · $0.014 / Lead · Max $14
+                    One-Time Pass · Unlocks 5,000 Credits Lifetime Pool
                   </div>
                 </div>
               </Reveal>
@@ -135,7 +135,7 @@ export default function App() {
                   tag="Intent-Driven Intelligence"
                   title="Buyers ready in the next 30 days"
                   body="Surface accounts triggering hiring spikes, funding signals, vendor switches, and product launches — scored 0–100 by our intent model."
-                  stat="Up to 1,000 Verified Leads per Pipeline Run"
+                  stat="Up to 5,000 Credits Spent Dynamically at Your Own Pace"
                   tall
                 />
               </Reveal>
@@ -183,7 +183,7 @@ export default function App() {
                 <p className="text-xs uppercase tracking-[0.3em] text-[oklch(0.78_0.18_300)]">Deploy With Us</p>
                 <h2 className="mt-3 font-display text-4xl sm:text-5xl font-semibold">Pick your mode of operation.</h2>
                 <p className="mt-4 text-muted-foreground">
-                  Need leads today? Launch the pipeline instantly. Need a full system built? Let's architect it together.
+                  Forget about recurring subscription traps. Pay once and unlock your permanent access token immediately.
                 </p>
               </div>
             </Reveal>
@@ -192,19 +192,20 @@ export default function App() {
               <Reveal>
                 <PricingCard
                   badge="Pulse Core — Lead Intelligence"
-                  price="Metered" // 🔥 حيدنا الـ $10 الثابتة باش الكليان يفهم الميترينغ
-                  cadence="$0.014 / verified lead"
-                  headline="Up to 1,000 Verified Leads."
-                  subtitle="Scraped live and priced instantly based on real-world regional availability. You only pay for what our engine extracts from your target location."
+                  price="$10" 
+                  cadence="pay once, own forever"
+                  headline="5,000 Liftoff Credits Pool."
+                  subtitle="Zero recurring subscriptions. No hidden fee structures. Pay once to activate an immutable 5,000 credit pipeline quota that you can burn completely at your own pace."
                   features={[
-                    "Pay-as-you-go dynamic metering ($14.00 total cap)",
-                    "Minimum of 50 up to 1,000 verified leads maximum",
-                    "Target any local country, region or global corridor",
-                    "Universal AI Expansion Matrix triggered on shortfalls",
-                    "Live crawled, deduplicated, and deeply validated",
-                    "Instant browser CSV unlock + email storage backup",
+                    "One-time absolute buyout ($10.00 total — not a subscription)",
+                    "Includes full 5,000 data extraction runtime credits pool",
+                    "Fixed calibration matrix: exactly 1 credit consumed per 10 premium leads",
+                    "Target any local city, industrial node, or global enterprise vertical",
+                    "Continuous live crawler deduplication & intense deep-ping confirmation",
+                    "Instant browser CSV injection unlock + secure Brevo email sync backup",
                   ]}
-                  ctaLabel="LAUNCH LIVE SCAN — PAY AS YOU GO"
+                  warningSentence="💡 Note on Purity: For ultra-narrow hyper-niches or tightly confined geographic sectors, our nodes prioritize mathematical accuracy over fake, bloated lists. Extremely micro-targeted queries might naturally yield concise, hyper-focused pools (e.g., 200–300 pristine contacts), ensuring you reach elite targets without paying for useless junk."
+                  ctaLabel="LAUNCH LIVE SCAN — UNLOCK 5,000 CREDITS"
                   onClick={() => setModal("core")}
                 />
               </Reveal>
@@ -231,7 +232,7 @@ export default function App() {
 
             <Reveal delay={200}>
               <p className="text-center text-xs text-muted-foreground mt-8">
-                Every Core pipeline execution initializes a live dynamic query node. No upfront payment required until results are fetched.
+                Your email identity serves as your persistent wallet authorization code. Enter it anytime on returning runs to view your active remaining credits instantly.
               </p>
             </Reveal>
           </div>
@@ -292,9 +293,9 @@ function FeatureCard({ tag, title, body, stat, tall = false }: {
   );
 }
 
-function PricingCard({ badge, price, cadence, headline, subtitle, features, ctaLabel, onClick, featured }: {
+function PricingCard({ badge, price, cadence, headline, subtitle, features, warningSentence, ctaLabel, onClick, featured }: {
   badge: string; price: string; cadence: string; headline: string; subtitle: string;
-  features: string[]; ctaLabel: string; onClick: () => void; featured?: boolean;
+  features: string[]; warningSentence?: string; ctaLabel: string; onClick: () => void; featured?: boolean;
 }) {
   return (
     <div className={`relative rounded-3xl p-8 halo h-full flex flex-col ${featured ? "glass-strong border-[oklch(0.55_0.24_305)]/40" : "glass"}`}>
@@ -310,6 +311,7 @@ function PricingCard({ badge, price, cadence, headline, subtitle, features, ctaL
       </div>
       <h3 className="mt-4 font-display text-2xl font-semibold">{headline}</h3>
       <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
+      
       <ul className="mt-6 space-y-3 text-sm flex-1">
         {features.map((f) => (
           <li key={f} className="flex gap-3">
@@ -318,9 +320,16 @@ function PricingCard({ badge, price, cadence, headline, subtitle, features, ctaL
           </li>
         ))}
       </ul>
+
+      {warningSentence && (
+        <div className="mt-5 text-xs p-3.5 rounded-xl bg-purple-500/5 border border-purple-500/10 text-muted-foreground leading-relaxed">
+          {warningSentence}
+        </div>
+      )}
+
       <button
         onClick={onClick}
-        className={`mt-8 halo-btn rounded-xl py-3.5 text-sm font-semibold tracking-wide border transition-all ${featured ? "bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border-white/20 hover:opacity-90" : "bg-white/5 border-white/10 hover:bg-white/10"}`}
+        className={`mt-6 halo-btn rounded-xl py-3.5 text-sm font-semibold tracking-wide border transition-all ${featured ? "bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border-white/20 hover:opacity-90" : "bg-white/5 border-white/10 hover:bg-white/10"}`}
       >
         {ctaLabel}
       </button>

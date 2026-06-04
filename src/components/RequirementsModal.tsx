@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { PayPalButtons } from "@paypal/react-paypal-js";
+import { supabase } from "@/lib/supabase"; // Ensure your Supabase client is correctly configured here
 
 interface RequirementsModalProps {
   plan: "core";
@@ -15,15 +16,19 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [step, setStep] = useState<"details" | "scan_preview" | "payment">("details");
+  
+  // 🧭 Advanced Multi-step Flow Controls
+  const [step, setStep] = useState<"email_check" | "details" | "payment">("email_check");
+  const [isExistingUser, setIsExistingUser] = useState(false);
+  const [creditsLeft, setCreditsLeft] = useState(5000);
+  const [registrationNotice, setRegistrationNotice] = useState<string | null>(null);
 
   // 🔄 Live Background Crawler Tracking Progress
   const [progress, setProgress] = useState(0);
   const [loadingStatusText, setLoadingStatusText] = useState("Touring Web Corridors...");
   
-  // 📈 Dynamic Pricing States (Pay-as-you-go: $0.014 / Lead)
+  // 📈 Dynamic Scaling States
   const [detectedLeads, setDetectedLeads] = useState(0);
-  const [dynamicPrice, setDynamicPrice] = useState("0.00");
   const [backendCampaignId, setBackendCampaignId] = useState<number | null>(null);
 
   // 🔐 Hidden Admin Bypass (Unlimited Free Owner Access)
@@ -43,6 +48,52 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
       localStorage.setItem("lorpulse_owner_access", "true");
       setIsOwnerMode(true);
       alert("⚡ Owner Privilege Engaged. Background async tracking activated.");
+    }
+  };
+
+  // 🔍 Check if client email already exists within Supabase campaigns infrastructure
+  const verifyOperatorEmail = async () => {
+    if (!formData.email.includes("@")) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true);
+    setLoadingStatusText("Querying Supabase Ledger Corridors...");
+    
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("leads_count") // or whichever field stores rows or lead counts
+        .eq("email", formData.email.trim().toLowerCase());
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // Existing user protocol initiated
+        setIsExistingUser(true);
+        setRegistrationNotice(null);
+
+        // 📊 Calculate remaining credits (1 credit used for every 10 leads pulled across all historic campaigns)
+        const totalLeadsExtracted = data.reduce((sum, item) => sum + (Number(item.leads_count) || 0), 0);
+        const creditsConsumed = Math.floor(totalLeadsExtracted / 10);
+        const calculatedRemaining = Math.max(0, 5000 - creditsConsumed);
+        
+        setCreditsLeft(calculatedRemaining);
+        setStep("details");
+      } else {
+        // New user protocol initiated
+        setIsExistingUser(false);
+        setRegistrationNotice("🚨 Profile not registered. You must complete your initial registration below to unlock your 5,000 credit liftoff pool.");
+        setStep("details");
+      }
+    } catch (err) {
+      console.error("Supabase engine synchronization error:", err);
+      // Fail-safe fallback to allow progress if database encounters unexpected downtime
+      setIsExistingUser(false);
+      setStep("details");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,18 +153,51 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
       setLoadingStatusText(`Mapping data corridors for "${formData.niche}"...`);
       
       setTimeout(() => {
-        // توليد عدد عشوائي ذكي بين 400 و 950 حبة (كيمثل الواقع)
         const leads = Math.floor(Math.random() * (950 - 400 + 1)) + 400;
-        // الحسبة الدقيقة: $0.014 لكل Lead مع سقف أقصى $14.00
-        const rawPrice = leads * 0.014;
-        const finalPrice = Math.min(rawPrice, 14.00).toFixed(2);
-        
         setDetectedLeads(leads);
-        setDynamicPrice(finalPrice);
         setLoading(false);
-        setStep("payment");
+
+        if (isExistingUser) {
+          // Returning paid accounts bypass the checkout screen completely and initialize nodes immediately using credit pools
+          triggerCreditDeductionPipeline();
+        } else {
+          // New operators go directly to the flat $10 checkout pass window
+          setStep("payment");
+        }
       }, 1500);
     }, 1200);
+  };
+
+  // 🔄 Automated existing user pipeline authorization using remaining credits
+  const triggerCreditDeductionPipeline = async () => {
+    setLoading(true);
+    setProgress(5);
+    setLoadingStatusText("Authorizing credit profile & injection paths...");
+    try {
+      const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan_type: plan,
+          niche: formData.niche,
+          city: formData.city,
+          email: formData.email.trim().toLowerCase(),
+          paypal_order_id: `CREDIT_POOL_REDEEM_${Date.now()}`,
+        }),
+      });
+
+      if (response.status === 202) {
+        const data = await response.json();
+        startPollingCampaign(data.campaign_id);
+      } else {
+        alert("Credit redemption sequence failed on the core backend cluster node.");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Credit workflow execution error:", error);
+      alert("Network alignment error. Dispatched support backup parameters.");
+      setLoading(false);
+    }
   };
 
   // 🚀 Owner bypass
@@ -148,7 +232,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }
   };
 
-  // 💳 Real client payment success
+  // 💳 Real client payment success (Flat rate: $10 for full access and 5,000 credits)
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
     setProgress(5);
@@ -161,7 +245,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           plan_type: plan,
           niche: formData.niche,
           city: formData.city,
-          email: formData.email,
+          email: formData.email.trim().toLowerCase(),
           paypal_order_id: orderId,
         }),
       });
@@ -196,8 +280,71 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
         {!success ? (
           <>
-            {step === "details" ? (
+            {/* STEP 1: INITIAL OPERATOR VERIFICATION SCREEN */}
+            {step === "email_check" && (
               <div className="animate-fadeIn">
+                <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
+                  Gateway Access
+                </div>
+                <h3
+                  onClick={handleSecretClick}
+                  className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none mb-2"
+                >
+                  Operator Verification
+                  {isOwnerMode && (
+                    <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async)</span>
+                  )}
+                </h3>
+                <p className="text-xs text-zinc-400 mb-6">
+                  Provide your active node delivery coordinates to check database logs and credit balances.
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">
+                      Your Identity Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
+                      placeholder="operator@agency.com"
+                    />
+                  </div>
+
+                  <button
+                    disabled={!formData.email.includes("@")}
+                    onClick={verifyOperatorEmail}
+                    className={`mt-4 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${
+                      formData.email.includes("@")
+                        ? "bg-white text-black hover:bg-zinc-200 cursor-pointer"
+                        : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"
+                    }`}
+                  >
+                    Verify Credentials →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: PIPELINE CONFIGURATION FORM */}
+            {step === "details" && (
+              <div className="animate-fadeIn relative">
+                {/* Dynamic Credit Counter Status View */}
+                <div className="absolute top-0 right-0 text-right">
+                  {isExistingUser ? (
+                    <span className="text-xs font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-md">
+                      ⚡ {creditsLeft.toLocaleString()} Credits Left
+                    </span>
+                  ) : (
+                    <span className="text-xs font-mono font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-md">
+                      🎁 5,000 Credits Pass Pending
+                    </span>
+                  )}
+                </div>
+
                 <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
                   Onboarding Setup
                 </div>
@@ -212,9 +359,16 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                   )}
                 </h3>
 
-                <p className="text-xs text-zinc-400 mt-1 mb-6">
-                  Pulse Core Plan — Metered Pricing ($0.014 / verified lead, max cap $14.00).
+                <p className="text-xs text-zinc-400 mt-1 mb-4">
+                  Pulse Core Plan — {isExistingUser ? "Redeeming existing runtime quotas." : "Metered Pricing Access."}
                 </p>
+
+                {/* Conditional Registration Warning Notice */}
+                {registrationNotice && (
+                  <div className="mb-4 text-xs p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 leading-relaxed animate-pulse">
+                    {registrationNotice}
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   <div>
@@ -226,7 +380,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
+                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600 opacity-80"
                       placeholder="operator@agency.com"
                     />
                   </div>
@@ -276,7 +430,10 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                   </button>
                 </div>
               </div>
-            ) : (
+            )}
+
+            {/* STEP 3: FLAT RATE SECURED CHECKOUT ($10 PASS FOR ALL 5,000 CREDITS) */}
+            {step === "payment" && (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
                 <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
@@ -287,26 +444,26 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                       ← Edit info
                     </button>
                     <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">
-                      Metered Invoice Total
+                      One-Time Liftoff Pass
                     </div>
                     
                     <div className="flex items-baseline gap-2">
-                      <h4 className="text-4xl font-bold text-white tracking-tight">${dynamicPrice}</h4>
+                      <h4 className="text-4xl font-bold text-white tracking-tight">$10.00</h4>
                       <span className="text-xs text-zinc-500 font-mono">USD</span>
                     </div>
 
                     <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 text-xs text-purple-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
-                      Detected {detectedLeads} verified records
+                      Unlocks full 5,000 lead package credits
                     </div>
 
                     <div className="mt-6 space-y-3 bg-zinc-900/40 border border-zinc-900 p-4 rounded-xl text-xs">
                       <div className="flex justify-between">
-                        <span className="text-zinc-500">Rate Card:</span>
-                        <span className="text-zinc-300 font-mono">$0.014 / Lead</span>
+                        <span className="text-zinc-500">Access Type:</span>
+                        <span className="text-zinc-300 font-medium">Pay Once & For All</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-zinc-500">Niche:</span>
+                        <span className="text-zinc-500">Niche Target:</span>
                         <span className="text-zinc-300 truncate max-w-[120px] font-medium">
                           {formData.niche}
                         </span>
@@ -324,7 +481,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                     </div>
                   </div>
                   <div className="text-[10px] text-zinc-600 mt-6 hidden md:block">
-                    Secured via PayPal encryption layers. Real-time pay-as-you-go extraction quota billing. 
+                    Secured via PayPal encryption layers. Lifetime access pool activation token inside.
                   </div>
                 </div>
 
@@ -340,8 +497,8 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                         return actions.order.create({
                           purchase_units: [
                             {
-                              amount: { value: dynamicPrice },
-                              description: `LorPulse Metered: ${detectedLeads} ${formData.niche} Leads in ${formData.city}`,
+                              amount: { value: "10.00" },
+                              description: `LorPulse Full Liftoff Pass: 5,000 Credits (${formData.niche} in ${formData.city})`,
                             },
                           ],
                         });
