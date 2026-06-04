@@ -1,15 +1,6 @@
 import { useState, useEffect } from "react";
 import { PayPalButtons } from "@paypal/react-paypal-js";
-// Fallback-safe supabase client reference to avoid build-time module resolution errors
-// If you have a real client at '@/lib/supabase', attach it to globalThis.__supabase
-// (e.g. in your app initialization) so this file will pick it up at runtime.
-const supabase: any = (globalThis as any).__supabase || {
-  from: () => ({
-    select: () => ({
-      eq: async () => ({ data: [], error: null }),
-    }),
-  }),
-};
+import { supabase } from "@/lib/supabase"; // Ensure your Supabase client is correctly configured here
 
 interface RequirementsModalProps {
   plan: "core";
