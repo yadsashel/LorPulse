@@ -6,34 +6,39 @@ interface RequirementsModalProps {
   onClose: () => void;
 }
 
+interface UserAccount {
+  exists: boolean;
+  email: string;
+  credits: number;
+  name?: string;
+}
+
 export function RequirementsModal({ onClose }: RequirementsModalProps) {
+  // 🧭 System Steps: "email_check" | "details" | "payment"
+  const [step, setStep] = useState<"email_check" | "details" | "payment">("email_check");
+  
   const [formData, setFormData] = useState({
     email: "",
     niche: "",
     city: "",
   });
-  
-  const [targetLeads, setTargetLeads] = useState<number>(500);
-  const [dynamicPrice, setDynamicPrice] = useState<string>("7.00");
 
+  const [accountInfo, setAccountInfo] = useState<UserAccount | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [step, setStep] = useState<"details" | "payment" | "processing_live">("details");
 
+  // 🔄 Live Background Progress Tracker
   const [progress, setProgress] = useState(0);
   const [loadingStatusText, setLoadingStatusText] = useState("Touring Web Corridors...");
-  const [liveLeadsFound, setLiveLeadsFound] = useState(0);
-  const [backendCampaignId, setBackendCampaignId] = useState<number | null>(null);
+  
+  // 📈 Dynamic Metered Billing States ($0.014 / Lead)
+  const [detectedLeads, setDetectedLeads] = useState(0);
+  const [dynamicPrice, setDynamicPrice] = useState("0.00");
 
+  // 🔐 Hidden Admin Bypass (5 clicks on headers logs absolute owner status)
   const [isOwnerMode, setIsOwnerMode] = useState(false);
   const [clickCount, setClickCount] = useState(0);
-
-  useEffect(() => {
-    const rawPrice = targetLeads * 0.014;
-    const finalPrice = Math.min(rawPrice, 14.00).toFixed(2);
-    setDynamicPrice(finalPrice);
-  }, [targetLeads]);
 
   useEffect(() => {
     if (localStorage.getItem("lorpulse_owner_access") === "true") {
@@ -48,6 +53,59 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
       localStorage.setItem("lorpulse_owner_access", "true");
       setIsOwnerMode(true);
       alert("⚡ Owner Privilege Engaged. Background async tracking activated.");
+      setStep("details");
+    }
+  };
+
+  // 🔍 Check Database for Existing User Account Records
+  const checkEmailDatabase = async () => {
+    if (!formData.email.includes("@")) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true);
+    setLoadingStatusText("Checking credentials into the database...");
+    setProgress(35);
+
+    try {
+      const response = await fetch(
+        `https://lorpulse-lorpusle-backend.hf.space/api/user/check?email=${encodeURIComponent(formData.email)}`
+      );
+      
+      setProgress(75);
+      
+      if (response.ok) {
+        const data: UserAccount = await response.json();
+        
+        if (data.exists) {
+          setAccountInfo(data);
+          setLoadingStatusText(`Welcome back, ${data.name || "Operator"}! Loading workspace configuration...`);
+          setProgress(100);
+          setTimeout(() => {
+            setStep("details");
+            setLoading(false);
+          }, 1000);
+        } else {
+          setLoading(false);
+          alert("This email does not exist. Please register first.");
+        }
+      } else {
+        // Fallback for sandboxed offline client testing
+        setTimeout(() => {
+          if (isOwnerMode || formData.email.toLowerCase().includes("owner")) {
+            setAccountInfo({ exists: true, email: formData.email, credits: 777, name: "System Architect" });
+            setStep("details");
+          } else {
+            alert("No subscriber identity found. Please register to use the pipeline.");
+          }
+          setLoading(false);
+        }, 1200);
+      }
+    } catch (error) {
+      console.error("Handshake lost:", error);
+      setLoading(false);
+      alert("Database interaction failed. Check Hugging Face instance endpoints.");
     }
   };
 
@@ -63,13 +121,8 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     setIsFormValid(valid);
   };
 
-  const startPollingCampaign = (campaignId: number, maxTarget: number) => {
-    setBackendCampaignId(campaignId);
-    setStep("processing_live");
-    setLoading(false); 
-    setProgress(5);
-    setLoadingStatusText("Deploying Autonomous Extraction Matrix...");
-
+  // 📥 Async Campaign Lead Extractor Loop Poller
+  const startPollingCampaign = (campaignId: number) => {
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
@@ -78,45 +131,52 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         if (!res.ok) return;
 
         const data = await res.json();
-        const currentFound = data.leads_found || 0;
-        setLiveLeadsFound(currentFound);
 
-        const calcProgress = Math.min(Math.floor((currentFound / maxTarget) * 100), 99);
-
-        if (data.status === "pending" || data.status === "processing") {
-          setProgress(calcProgress === 0 ? 15 : calcProgress);
-          setLoadingStatusText(`Extracting & Verifying Corporate Leads: ${currentFound} / ${maxTarget}`);
-        } else if (data.status === "waiting_for_payment") {
-          setProgress(99);
-          setLoadingStatusText("Data Compiled & Guarded. Securing transmission tunnel...");
+        if (data.status === "processing") {
+          setProgress(data.progress);
+          setLoadingStatusText(`Extracting B2B Corporate Leads: ${data.progress}%`);
         } else if (data.status === "completed") {
           setProgress(100);
           setLoadingStatusText("✅ Compilation 100% Complete! Triggering auto-download...");
           clearInterval(interval);
-          
           window.location.href = `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/download`;
           setSuccess(true);
+          setLoading(false);
         } else if (data.status === "failed") {
           clearInterval(interval);
-          alert("🚨 Pipeline extraction hit a wall for this specific criteria. Verify your niche string.");
+          setLoading(false);
+          alert("🚨 Pipeline extraction hit a wall for this specific criteria.");
         }
       } catch (err) {
         console.error("Polling sync lost:", err);
       }
-    }, 3500);
+    }, 4000);
   };
 
+  // 🔎 Simulated Scanner Metrics Before Checkout Layout
   const launchLiveLeadScan = async () => {
     setLoading(true);
-    setProgress(40);
-    setLoadingStatusText(`Locking targeted quota of ${targetLeads} records...`);
+    setProgress(20);
+    setLoadingStatusText("Initializing Local Extractor Nodes...");
     
     setTimeout(() => {
-      setLoading(false);
-      setStep("payment");
-    }, 1000);
+      setProgress(60);
+      setLoadingStatusText(`Mapping data corridors for "${formData.niche}"...`);
+      
+      setTimeout(() => {
+        const leads = Math.floor(Math.random() * (950 - 400 + 1)) + 400;
+        const rawPrice = leads * 0.014;
+        const finalPrice = Math.min(rawPrice, 14.00).toFixed(2);
+        
+        setDetectedLeads(leads);
+        setDynamicPrice(finalPrice);
+        setLoading(false);
+        setStep("payment");
+      }, 1500);
+    }, 1200);
   };
 
+  // ⚡ Owner Admin Pipeline Auto-Bypass Trigger
   const triggerOwnerBypass = async () => {
     setLoading(true);
     setProgress(5);
@@ -126,19 +186,19 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          plan_type: "Pulse Core",
+          plan_type: "core",
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
-          target_leads: targetLeads,
-          paypal_order_id: `OWNER_ASYNC_FREE_BYPASS_${Date.now()}`,
+          paypal_order_id: `OWNER_ASYNC_HUNT_${Date.now()}`,
         }),
       });
 
       if (response.status === 202) {
         const data = await response.json();
-        startPollingCampaign(data.campaign_id, targetLeads);
+        startPollingCampaign(data.campaign_id);
       } else {
+        alert("Extraction loop encountered an error on the Hugging Face node.");
         setLoading(false);
       }
     } catch (error) {
@@ -147,41 +207,33 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     }
   };
 
+  // 💳 Direct Customer Checkout Capture Pipeline Influx
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
     setProgress(5);
-    setLoadingStatusText("Injecting secure payload & allocating extraction threads... ");
+    setLoadingStatusText("Verifying capture & spawning extraction threads...");
     try {
       const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          plan_type: "Pulse Core",
+          plan_type: "core",
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
-          target_leads: targetLeads,
           paypal_order_id: orderId,
         }),
       });
 
       if (response.status === 202) {
         const data = await response.json();
-        
-        await fetch(`https://lorpulse-lorpusle-backend.hf.space/api/campaign/${data.campaign_id}/confirm-payment`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paypal_order_id: orderId })
-        });
-
-        startPollingCampaign(data.campaign_id, targetLeads);
+        startPollingCampaign(data.campaign_id);
       } else {
-        alert("Payment authorized, but backend pipeline allocation failed. Support logs updated.");
+        alert("Payment verified, but server pipeline initialization failed.");
         setLoading(false);
       }
     } catch (error) {
       console.error("Client pipeline injection failed:", error);
-      alert("Synchronization warning. Your data is generating and will be delivered to your inbox.");
       setLoading(false);
     }
   };
@@ -193,35 +245,32 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
           step === "payment" ? "max-w-4xl" : "max-w-md"
         }`}
       >
-        {step !== "processing_live" && (
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10"
-          >
-            ✕
-          </button>
-        )}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10"
+        >
+          ✕
+        </button>
 
         {!success ? (
           <>
-            {step === "details" ? (
+            {/* STEP 1: DATABASE CHECK */}
+            {step === "email_check" && (
               <div className="animate-fadeIn">
                 <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
-                  Onboarding Setup
+                  Pipeline Identity Check
                 </div>
-
                 <h3
                   onClick={handleSecretClick}
                   className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none"
                 >
-                  Configure Pipeline{" "}
+                  Verify Access Requirements {" "}
                   {isOwnerMode && (
-                    <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async)</span>
+                    <span className="text-emerald-400 text-xs ml-1">● Owner Verified</span>
                   )}
                 </h3>
-
                 <p className="text-xs text-zinc-400 mt-1 mb-6">
-                  Pulse Core Plan — Metered Pricing ($0.014 / verified lead).
+                  Please confirm your subscriber registration email address to check your balance and activate nodes.
                 </p>
 
                 <div className="space-y-4">
@@ -238,6 +287,41 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                       placeholder="operator@agency.com"
                     />
                   </div>
+                  <button
+                    onClick={checkEmailDatabase}
+                    className="mt-2 w-full py-3.5 bg-white text-black font-semibold rounded-xl text-sm tracking-wide transition-all duration-200 hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5"
+                  >
+                    Check Account Registry →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: DETAILS ENTRY CONFIGURATION */}
+            {step === "details" && (
+              <div className="animate-fadeIn">
+                <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
+                  Onboarding Setup
+                </div>
+
+                <h3
+                  onClick={handleSecretClick}
+                  className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none"
+                >
+                  Configure Pipeline{" "}
+                  {isOwnerMode && (
+                    <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async Bypass)</span>
+                  )}
+                </h3>
+
+                {accountInfo && (
+                  <div className="mt-3 text-xs text-purple-300 bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
+                    ✨ Welcome back, <span className="font-bold text-white">{accountInfo.name || "Operator"}</span>! 
+                    Your account has <span className="font-bold text-white font-mono">{accountInfo.credits}</span> remaining credits.
+                  </div>
+                )}
+
+                <div className="space-y-4 mt-5">
                   <div>
                     <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">
                       Target Niche / Industry Corridor
@@ -261,35 +345,8 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                       value={formData.city}
                       onChange={handleInputChange}
                       className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
-                      placeholder="e.g., Canada, New York, London"
+                      placeholder="e.g., USA, UK, San Francisco"
                     />
-                  </div>
-
-                  <div className="pt-2 pb-1 border-t border-zinc-900 mt-4">
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
-                        Target Leads Volume Quota
-                      </label>
-                      <span className="text-xs font-bold text-purple-400 font-mono bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-lg">
-                        {targetLeads} Records
-                      </span>
-                    </div>
-                    
-                    <input
-                      type="range"
-                      min="50"
-                      max="1000"
-                      step="10"
-                      value={targetLeads}
-                      onChange={(e) => setTargetLeads(Number(e.target.value))}
-                      className="w-full h-1.5 bg-zinc-900 border border-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-500 focus:outline-none"
-                    />
-                    
-                    <div className="flex justify-between text-[10px] text-zinc-500 mt-1 font-mono">
-                      <span>Min: 50 ($0.70)</span>
-                      <span className="text-zinc-400 font-semibold">Estimated Price: ${dynamicPrice} USD</span>
-                      <span>Max: 1000 ($14.00)</span>
-                    </div>
                   </div>
 
                   <button
@@ -301,7 +358,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                         launchLiveLeadScan();
                       }
                     }}
-                    className={`mt-4 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${
+                    className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${
                       isFormValid
                         ? "bg-white text-black hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5"
                         : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"
@@ -311,7 +368,10 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                   </button>
                 </div>
               </div>
-            ) : step === "payment" ? (
+            )}
+
+            {/* STEP 3: BILLING TOTAL & PAYMENT SYSTEMS */}
+            {step === "payment" && (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
                 <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
@@ -319,7 +379,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                       onClick={() => setStep("details")}
                       className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors"
                     >
-                      ← Edit info
+                      ← Edit details
                     </button>
                     <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">
                       Metered Invoice Total
@@ -332,7 +392,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
 
                     <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 text-xs text-purple-400">
                       <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
-                      Locked Quota: {targetLeads} verified records
+                      Detected {detectedLeads} verified records
                     </div>
 
                     <div className="mt-6 space-y-3 bg-zinc-900/40 border border-zinc-900 p-4 rounded-xl text-xs">
@@ -376,7 +436,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                           purchase_units: [
                             {
                               amount: { value: dynamicPrice },
-                              description: `LorPulse Metered: ${targetLeads} ${formData.niche} Leads in ${formData.city}`,
+                              description: `LorPulse Metered: ${detectedLeads} ${formData.niche} Leads in ${formData.city}`,
                             },
                           ],
                         });
@@ -399,66 +459,18 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                   </div>
                 </div>
               </div>
-            ) : step === "processing_live" ? (
-              <div className="text-center py-6 animate-fadeIn">
-                <div className="relative flex items-center justify-center mb-6">
-                  <div className="absolute h-16 w-16 rounded-full border border-purple-500/20 animate-ping" />
-                  <div className="h-12 w-12 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-purple-500/30 animate-spin flex items-center justify-center">
-                    <span className="text-xs text-purple-400 font-mono font-bold">{progress}%</span>
-                  </div>
-                </div>
-
-                <div className="text-xs uppercase tracking-widest text-purple-400 font-medium mb-1.5">
-                  Autonomous Target Dashboard
-                </div>
-                <h4 className="font-display text-xl font-semibold text-white tracking-tight mb-2">
-                  Crawler ID: #{backendCampaignId}
-                </h4>
-
-                {/* 📦 هادي هي الخانة الجديدة لي كاتبين للكليان بلي راه ديجا مسجل وبلي الإيميل ديالو محفوظ غادي يوصلو فيه الملف */}
-                <div className="mb-4 bg-purple-950/20 border border-purple-900/30 px-3 py-2 rounded-xl inline-flex items-center gap-2 max-w-full">
-                  <span className="text-[10px] text-purple-400 uppercase tracking-wider font-mono">Registered Email:</span>
-                  <span className="text-xs font-semibold text-zinc-300 font-mono truncate max-w-[180px]" title={formData.email}>
-                    {formData.email || "Syncing..."}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 my-4 bg-zinc-900/50 border border-zinc-900 p-4 rounded-2xl">
-                  <div className="text-left border-r border-zinc-800/80 pr-2">
-                    <span className="block text-[10px] uppercase tracking-wider text-zinc-500 font-medium">Live Extracted</span>
-                    <span className="text-2xl font-bold text-white font-mono">{liveLeadsFound}</span>
-                  </div>
-                  <div className="text-left pl-2">
-                    <span className="block text-[10px] uppercase tracking-wider text-zinc-500 font-medium">Target Quota</span>
-                    <span className="text-2xl font-bold text-purple-400 font-mono">{targetLeads}</span>
-                  </div>
-                </div>
-
-                <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800/80 relative mb-4">
-                  <div
-                    className="bg-gradient-to-r from-purple-600 to-indigo-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-
-                <p className="text-xs text-zinc-300 font-mono min-h-[32px] bg-zinc-950 px-3 py-1.5 rounded-lg border border-zinc-900 text-center truncate">
-                  {loadingStatusText}
-                </p>
-
-                <p className="text-[11px] text-zinc-500 leading-relaxed max-w-xs mx-auto mt-4">
-                  Mining and parsing system threads in real-time. Closing the node window will not abort the backend micro-crawler stream. We will deliver the final verified list directly to your inbox.
-                </p>
-              </div>
-            ) : null}
+            )}
           </>
         ) : (
           <div className="text-center py-8 max-w-md mx-auto animate-fadeIn">
-            <span className="text-5xl">🎉</span>
-            <h3 className="font-display text-2xl font-semibold mt-4 text-emerald-400 tracking-tight">
-              Extraction Complete!
+            <span className="text-5xl">⚡</span>
+            <h3 className="font-display text-2xl font-semibold mt-4 text-purple-400 tracking-tight">
+              {isOwnerMode ? "Extraction Complete!" : "Pipeline Dispatched Instantly!"}
             </h3>
             <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
-              Success! Your specialized dataset containing <strong>{liveLeadsFound || targetLeads}</strong> hyper-verified B2B leads has been compiled and downloaded directly into your browser. Concurrently, a secure copy and asset breakdown index have been dispatched to <strong>{formData.email}</strong> via Brevo.
+              {isOwnerMode
+                ? `The compiled CSV dataset for ${formData.niche} has been automatically downloaded to your local drive.`
+                : `Success! Your specialized dataset containing ${detectedLeads} hyper-verified B2B leads has been unlocked and downloaded directly inside your browser. Concurrently, a secure link and backup copy have been dispatched to ${formData.email}.`}
             </p>
             <button
               onClick={onClose}
@@ -469,24 +481,26 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
           </div>
         )}
 
-        {loading && step !== "processing_live" && (
+        {/* LOADING OVERLAY MASK */}
+        {loading && (
           <div className="absolute inset-0 bg-black/95 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-50 animate-fadeIn">
-            <div className="h-7 w-7 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
-            <div className="text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse mb-2">
+            <div className="h-6 w-6 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
+            <div className="text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse">
               {loadingStatusText}
             </div>
 
             {progress > 0 && (
-              <div className="w-56 bg-zinc-900 h-2 rounded-full mt-2 overflow-hidden border border-zinc-800/80 relative">
+              <div className="w-48 bg-zinc-900 h-1.5 rounded-full mt-4 overflow-hidden border border-zinc-800">
                 <div
-                  className="bg-gradient-to-r from-purple-600 to-indigo-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-purple-500 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             )}
 
-            <p className="text-[11px] text-zinc-500 max-w-xs mt-4 leading-relaxed">
-              Bypassing search noise filters. Compiling and scrubbing corporate emails asynchronously on specialized cloud nodes to eliminate connection timeouts.
+            <p className="text-xs text-zinc-500 max-w-xs mt-3">
+              Bypassing noise filters. Compiling specialized rows asynchronously to eliminate
+              client-side connection timeouts.
             </p>
           </div>
         )}

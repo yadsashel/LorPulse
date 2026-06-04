@@ -41,7 +41,7 @@ export default function App() {
 
   // 🛠️ 1. تحقق من إيميل المستخدم والـ Credits دياولو ف الداتا بيز
   const handleVerifyIdentity = async (e: React.FormEvent) => {
-    preventDefault();
+    e.preventDefault();
     if (!authEmail.trim()) return;
 
     try {
@@ -64,7 +64,7 @@ export default function App() {
 
   // ⚡ 2. إطلاق مصفوفة الكراولر (Launch Live Lead Scan)
   const handleLaunchScan = async (e: React.FormEvent) => {
-    preventDefault();
+    e.preventDefault();
     if (creditsLeft <= 0) {
       alert("⚠️ Operational halt: Credit balance is empty. Top up your ledger package.");
       return;
