@@ -41,7 +41,7 @@ export default function App() {
 
   // 🛠️ 1. تحقق من إيميل المستخدم والـ Credits دياولو ف الداتا بيز
   const handleVerifyIdentity = async (e: React.FormEvent) => {
-    e.preventDefault();
+    preventDefault();
     if (!authEmail.trim()) return;
 
     try {
@@ -64,7 +64,7 @@ export default function App() {
 
   // ⚡ 2. إطلاق مصفوفة الكراولر (Launch Live Lead Scan)
   const handleLaunchScan = async (e: React.FormEvent) => {
-    e.preventDefault();
+    preventDefault();
     if (creditsLeft <= 0) {
       alert("⚠️ Operational halt: Credit balance is empty. Top up your ledger package.");
       return;
@@ -187,7 +187,7 @@ export default function App() {
                   ["98.4%", "Email deliverability"],
                   ["Asymmetric", "Credit Ledger Scan"], 
                   ["12k+", "Niches mapped"],
-                  ["0/5000", "Initial Credit Allocations"], 
+                  ["5,000", "Instant Credits Added"], 
                 ].map(([k, v]) => (
                   <div key={v} className="glass halo rounded-2xl px-5 py-5 text-left">
                     <div className="font-display text-2xl text-glow">{k}</div>
@@ -278,17 +278,17 @@ export default function App() {
               <Reveal>
                 <PricingCard
                   badge="Pulse Core — Lead Intelligence"
-                  price="Credits" 
-                  cadence="5,000 unit allocation"
-                  headline="Execute Endless Deep Hunts."
-                  subtitle="No rigid upfront per-batch limitations. Authenticate your vector email profile, spin up the multi-node crawler matrix, and extract clean business records directly against your master ledger."
+                  price="$10" 
+                  cadence="one-time payment"
+                  headline="5,000 Credits. Infinite Deep Hunts."
+                  subtitle="Unlock full infrastructure access with zero upfront batch restrictions. Authenticate your vector profile, fire up the multi-node crawler matrix, and inject clean business records directly into your master ledger."
                   features={[
-                    "Unified Credit Balance Ledger (5,000 units initial)",
-                    "Proportional metering: 1 token deducted per 10 verified leads discovered",
-                    "Target any local city, industrial corridor, or global node",
-                    "Universal AI Expansion Matrix automatically activated on shortfalls",
-                    "Live crawled, deeply validated, and triple-filtered structure",
-                    "Instant browser CSV injection unlock + secure email document delivery",
+                    "Unified Credit Balance Ledger (5,000 instant credits)",
+                    "Asymmetric Extraction: 1 credit maps directly to 10 verified data rows",
+                    "Target any micro-niche, industrial corridor, or geographic node",
+                    "Deep-validation engine with triple-filtering (removes dead emails)",
+                    "Instant browser CSV injection + automated backup via email routing",
+                    "Lifetime access layer — balances never expire or vanish",
                   ]}
                   ctaLabel="LAUNCH LIVE LEAD SCAN"
                   onClick={() => {
