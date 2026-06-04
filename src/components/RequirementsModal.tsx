@@ -15,11 +15,12 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [step, setStep] = useState<"details" | "scan_preview" | "payment">("details");
+  const [step, setStep] = useState<"details" | "scan_preview" | "payment" | "processing_live">("details");
 
   // 🔄 Live Background Crawler Tracking Progress
   const [progress, setProgress] = useState(0);
   const [loadingStatusText, setLoadingStatusText] = useState("Touring Web Corridors...");
+  const [liveLeadsFound, setLiveLeadsFound] = useState(0);
   
   // 📈 Dynamic Pricing States (Pay-as-you-go: $0.014 / Lead)
   const [detectedLeads, setDetectedLeads] = useState(0);
@@ -58,8 +59,14 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     setIsFormValid(valid);
   };
 
-  // 📥 Live Polling Loop for Completion & Download
-  const startPollingCampaign = (campaignId: number) => {
+  // 📥 Live Polling Loop for Crawler Status Updates
+  const startPollingCampaign = (campaignId: number, targetLeads: number) => {
+    setBackendCampaignId(campaignId);
+    setStep("processing_live");
+    setLoading(true);
+    setProgress(5);
+    setLoadingStatusText("Deploying Autonomous Extraction Matrix...");
+
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
@@ -68,14 +75,25 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         if (!res.ok) return;
 
         const data = await res.json();
+        const currentFound = data.leads_found || 0;
+        setLiveLeadsFound(currentFound);
 
-        if (data.status === "processing") {
-          setProgress(data.progress);
-          setLoadingStatusText(`Extracting B2B Corporate Leads: ${data.progress}%`);
+        // حساب نسبة التقدم الحقيقية بناءً على ما وجده الكراولر مقارنة بالمطلوب
+        const calcProgress = Math.min(Math.floor((currentFound / targetLeads) * 100), 99);
+
+        if (data.status === "pending" || data.status === "processing") {
+          setProgress(calcProgress === 0 ? 15 : calcProgress);
+          setLoadingStatusText(`Extracting & Verifying Corporate Leads: ${currentFound} / ${targetLeads}`);
+        } else if (data.status === "waiting_for_payment") {
+          // الباكيند أنهى الجمع وينتظر توثيق الدفع لإتاحة التحميل المباشر
+          setProgress(99);
+          setLoadingStatusText("Data Compiled & Guarded. Securing transmission tunnel...");
         } else if (data.status === "completed") {
           setProgress(100);
           setLoadingStatusText("✅ Compilation 100% Complete! Triggering auto-download...");
           clearInterval(interval);
+          
+          // تحميل الملف فورا للكليان
           window.location.href = `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/download`;
           setSuccess(true);
           setLoading(false);
@@ -87,24 +105,21 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
       } catch (err) {
         console.error("Polling sync lost:", err);
       }
-    }, 4000);
+    }, 3500);
   };
 
-  // 🔍 Simulated or Initial Server Scan to find out how many leads exist
+  // 🔍 Simulated Server Scan to warm up the client before checkout
   const launchLiveLeadScan = async () => {
     setLoading(true);
     setProgress(20);
     setLoadingStatusText("Initializing Local Extractor Nodes...");
     
-    // محاكاة سريعة ومثيرة للـ Live Scan قبل الدفع باش الكليان يشوف النتيجة ويتحمس
     setTimeout(() => {
       setProgress(60);
       setLoadingStatusText(`Mapping data corridors for "${formData.niche}"...`);
       
       setTimeout(() => {
-        // توليد عدد عشوائي ذكي بين 400 و 950 حبة (كيمثل الواقع)
         const leads = Math.floor(Math.random() * (950 - 400 + 1)) + 400;
-        // الحسبة الدقيقة: $0.014 لكل Lead مع سقف أقصى $14.00
         const rawPrice = leads * 0.014;
         const finalPrice = Math.min(rawPrice, 14.00).toFixed(2);
         
@@ -116,66 +131,84 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     }, 1200);
   };
 
-  // 🚀 Owner bypass
+  // 🚀 Owner bypass (Processes instantly for free)
   const triggerOwnerBypass = async () => {
     setLoading(true);
     setProgress(5);
     setLoadingStatusText("Initializing Secure Async Pipeline Node...");
+    const freeTargetLeads = 500;
     try {
       const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          plan_type: "core",
+          plan_type: "Pulse Core",
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
-          paypal_order_id: `OWNER_ASYNC_HUNT_${Date.now()}`,
+          target_leads: freeTargetLeads,
+          paypal_order_id: `OWNER_ASYNC_FREE_BYPASS_${Date.now()}`,
         }),
       });
 
       if (response.status === 202) {
         const data = await response.json();
-        startPollingCampaign(data.campaign_id);
+        // المالك يتخطى الدفع مباشرة، نقوم بعمل تأكيد تلقائي للسيرفر ليفجر التحميل
+        await fetch(`https://lorpulse-lorpusle-backend.hf.space/api/campaign/${data.campaign_id}/confirm-payment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paypal_order_id: `OWNER_CONFIRMED_${Date.now()}` })
+        });
+        startPollingCampaign(data.campaign_id, freeTargetLeads);
       } else {
         alert("Extraction loop encountered an error on the Hugging Face node.");
         setLoading(false);
       }
     } catch (error) {
       console.error("Owner pipeline execution failed:", error);
-      alert("Network connection error. Check Hugging Face instance logs.");
       setLoading(false);
     }
   };
 
-  // 💳 Real client payment success
+  // 💳 Triggered right after client approves PayPal charge
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
     setProgress(5);
-    setLoadingStatusText("Verifying capture & spawning extraction threads...");
+    setLoadingStatusText("Injecting secure payload & allocating extraction threads...");
     try {
+      // 1. إنشاء الحملة وجدولة الكراولر في الخلفية
       const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          plan_type: "core",
+          plan_type: "Pulse Core",
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
+          target_leads: detectedLeads,
           paypal_order_id: orderId,
         }),
       });
 
       if (response.status === 202) {
         const data = await response.json();
-        startPollingCampaign(data.campaign_id);
+        
+        // 2. تأكيد الدفع فوراً لإرسال بريد العميل عبر Brevo وتفعيل صلاحية التحميل
+        await fetch(`https://lorpulse-lorpusle-backend.hf.space/api/campaign/${data.campaign_id}/confirm-payment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paypal_order_id: orderId })
+        });
+
+        // 3. بدء عملية الـ Polling لمواكبة استخراج البيانات لايف أمام العميل
+        startPollingCampaign(data.campaign_id, detectedLeads);
       } else {
-        alert("Payment verified, but server pipeline initialization failed. Support notified.");
+        alert("Payment authorized, but backend pipeline allocation failed. Support logs updated.");
         setLoading(false);
       }
     } catch (error) {
       console.error("Client pipeline injection failed:", error);
-      alert("Network error synchronization. The server will deliver via Brevo email backup.");
+      alert("Synchronization warning. Your data is generating and will be delivered to your inbox.");
       setLoading(false);
     }
   };
@@ -253,7 +286,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                       value={formData.city}
                       onChange={handleInputChange}
                       className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
-                      placeholder="e.g., USA, UK, San Francisco, London"
+                      placeholder="e.g., Canada, New York, London"
                     />
                   </div>
 
@@ -276,7 +309,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                   </button>
                 </div>
               </div>
-            ) : (
+            ) : step === "payment" ? (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
                 <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
@@ -364,18 +397,16 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
           </>
         ) : (
           <div className="text-center py-8 max-w-md mx-auto animate-fadeIn">
-            <span className="text-5xl">⚡</span>
-            <h3 className="font-display text-2xl font-semibold mt-4 text-purple-400 tracking-tight">
-              {isOwnerMode ? "Extraction Complete!" : "Pipeline Dispatched Instantly!"}
+            <span className="text-5xl">🎉</span>
+            <h3 className="font-display text-2xl font-semibold mt-4 text-emerald-400 tracking-tight">
+              Extraction Complete!
             </h3>
             <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
-              {isOwnerMode
-                ? `The compiled CSV dataset for ${formData.niche} has been automatically downloaded to your local drive.`
-                : `Success! Your specialized dataset containing ${detectedLeads} hyper-verified B2B leads has been unlocked and downloaded directly inside your browser. Concurrently, a secure link and backup copy have been dispatched to ${formData.email} via Brevo.`}
+              Success! Your specialized dataset containing <strong>{liveLeadsFound || detectedLeads}</strong> hyper-verified B2B leads has been compiled and downloaded directly into your browser. Concurrently, a secure copy and asset breakdown index have been dispatched to <strong>{formData.email}</strong> via Brevo.
             </p>
             <button
               onClick={onClose}
@@ -388,23 +419,22 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
 
         {loading && (
           <div className="absolute inset-0 bg-black/95 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-50 animate-fadeIn">
-            <div className="h-6 w-6 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
-            <div className="text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse">
+            <div className="h-7 w-7 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
+            <div className="text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse mb-2">
               {loadingStatusText}
             </div>
 
             {progress > 0 && (
-              <div className="w-48 bg-zinc-900 h-1.5 rounded-full mt-4 overflow-hidden border border-zinc-800">
+              <div className="w-56 bg-zinc-900 h-2 rounded-full mt-2 overflow-hidden border border-zinc-800/80 relative">
                 <div
-                  className="bg-purple-500 h-1.5 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-purple-600 to-indigo-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             )}
 
-            <p className="text-xs text-zinc-500 max-w-xs mt-3">
-              Bypassing noise filters. Compiling specialized rows asynchronously to eliminate
-              client-side connection timeouts.
+            <p className="text-[11px] text-zinc-500 max-w-xs mt-4 leading-relaxed">
+              Bypassing search noise filters. Compiling and scrubbing corporate emails asynchronously on specialized cloud nodes to eliminate connection timeouts.
             </p>
           </div>
         )}
