@@ -72,7 +72,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
   const startPollingCampaign = (campaignId: number, maxTarget: number) => {
     setBackendCampaignId(campaignId);
     setStep("processing_live");
-    setLoading(true);
+    setLoading(false); // Hide global absolute loading overlay to expose live dashboard counters
     setProgress(5);
     setLoadingStatusText("Deploying Autonomous Extraction Matrix...");
 
@@ -103,10 +103,8 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
           
           window.location.href = `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/download`;
           setSuccess(true);
-          setLoading(false);
         } else if (data.status === "failed") {
           clearInterval(interval);
-          setLoading(false);
           alert("🚨 Pipeline extraction hit a wall for this specific criteria. Verify your niche string.");
         }
       } catch (err) {
@@ -146,18 +144,6 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         }),
       });
 
-      if (response.status === 202) {
-        const data = await response.json();
-        await fetch(`https://lorpulse-lorpusle-backend.hf.space/api/campaign/${data.campaign_id}/confirm-payment`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paypal_order_id: `OWNER_CONFIRMED_${Date.now()}` })
-        });
-        startPollingCampaign(data.campaign_id, targetLeads);
-      } else {
-        alert("Extraction loop encountered an error on the Hugging Face node.");
-        setLoading(false);
-      }
     } catch (error) {
       console.error("Owner pipeline execution failed:", error);
       setLoading(false);
@@ -178,7 +164,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
           niche: formData.niche,
           city: formData.city,
           email: formData.email,
-          target_leads: targetLeads, // إرسال العدد الحقيقي المختار من السلايدر ليلتزم به السيرفر
+          target_leads: targetLeads,
           paypal_order_id: orderId,
         }),
       });
@@ -211,12 +197,14 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
           step === "payment" ? "max-w-4xl" : "max-w-md"
         }`}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10"
-        >
-          ✕
-        </button>
+        {step !== "processing_live" && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10"
+          >
+            ✕
+          </button>
+        )}
 
         {!success ? (
           <>
@@ -281,7 +269,6 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                     />
                   </div>
 
-                  {/* 🎚️ الـ Slider الذكي الجديد لتحديد كمية الـ Leads والثمن لايف */}
                   <div className="pt-2 pb-1 border-t border-zinc-900 mt-4">
                     <div className="flex justify-between items-center mb-1.5">
                       <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium">
@@ -416,6 +403,48 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                   </div>
                 </div>
               </div>
+            ) : step === "processing_live" ? (
+              <div className="text-center py-6 animate-fadeIn">
+                <div className="relative flex items-center justify-center mb-6">
+                  <div className="absolute h-16 w-16 rounded-full border border-purple-500/20 animate-ping" />
+                  <div className="h-12 w-12 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-purple-500/30 animate-spin flex items-center justify-center">
+                    <span className="text-xs text-purple-400 font-mono font-bold">{progress}%</span>
+                  </div>
+                </div>
+
+                <div className="text-xs uppercase tracking-widest text-purple-400 font-medium mb-1.5">
+                  Autonomous Target Dashboard
+                </div>
+                <h4 className="font-display text-xl font-semibold text-white tracking-tight mb-4">
+                  Crawler ID: #{backendCampaignId}
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4 my-6 bg-zinc-900/50 border border-zinc-900 p-4 rounded-2xl">
+                  <div className="text-left border-r border-zinc-800/80 pr-2">
+                    <span className="block text-[10px] uppercase tracking-wider text-zinc-500 font-medium">Live Extracted</span>
+                    <span className="text-2xl font-bold text-white font-mono">{liveLeadsFound}</span>
+                  </div>
+                  <div className="text-left pl-2">
+                    <span className="block text-[10px] uppercase tracking-wider text-zinc-500 font-medium">Target Quota</span>
+                    <span className="text-2xl font-bold text-purple-400 font-mono">{targetLeads}</span>
+                  </div>
+                </div>
+
+                <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800/80 relative mb-4">
+                  <div
+                    className="bg-gradient-to-r from-purple-600 to-indigo-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+
+                <p className="text-xs text-zinc-300 font-mono min-h-[32px] bg-zinc-950 px-3 py-1.5 rounded-lg border border-zinc-900 text-center truncate">
+                  {loadingStatusText}
+                </p>
+
+                <p className="text-[11px] text-zinc-500 leading-relaxed max-w-xs mx-auto mt-4">
+                  Mining and parsing system threads in real-time. Closing the node window will not abort the backend micro-crawler stream.
+                </p>
+              </div>
             ) : null}
           </>
         ) : (
@@ -436,7 +465,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
           </div>
         )}
 
-        {loading && (
+        {loading && step !== "processing_live" && (
           <div className="absolute inset-0 bg-black/95 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-50 animate-fadeIn">
             <div className="h-7 w-7 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
             <div className="text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse mb-2">

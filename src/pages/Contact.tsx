@@ -4,7 +4,56 @@ import { useState } from "react";
 
 export default function Contact() {
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<"leads" | "custom">("custom");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg(null);
+
+    const formData = new FormData(e.currentTarget);
+    
+    // Extract state matching backend pydantic model constraints
+    const payload = {
+      plan_type: selectedPlan === "leads" ? "Lead Intelligence" : "Custom AI Build",
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      company: formData.get("company") as string,
+      role: (formData.get("role") as string) || "N/A",
+      niche: formData.get("niche") as string,
+      country: formData.get("country") as string,
+      volume_or_budget: selectedPlan === "leads" 
+        ? (formData.get("volume") as string) 
+        : (formData.get("budget") as string) || "N/A",
+      notes: (formData.get("notes") as string) || ""
+    };
+
+    try {
+      // Points straight to your local or deployed FastAPI infrastructure URL
+      const BACKEND_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+      const res = await fetch(`${BACKEND_URL}/api/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Failed to submit request corridor pipeline.");
+      }
+
+      setSent(true);
+    } catch (err: any) {
+      console.error("🚨 Transmission error:", err);
+      setErrorMsg(err.message || "An unexpected network disruption occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SiteShell>
@@ -26,7 +75,7 @@ export default function Contact() {
           <Reveal delay={120}>
             <div className="mt-10 glass-strong halo rounded-3xl p-6 sm:p-8 border-white/5">
               {!sent ? (
-                <form className="grid gap-5" onSubmit={(e) => { e.preventDefault(); setSent(true); }}>
+                <form className="grid gap-5" onSubmit={handleSubmit}>
                   
                   {/* 🎛️ Interactive Plan Selector */}
                   <div className="grid gap-2">
@@ -101,12 +150,19 @@ export default function Contact() {
                     } 
                   />
 
+                  {errorMsg && (
+                    <div className="text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/20 px-4 py-2.5 rounded-xl">
+                      ⚠️ {errorMsg}
+                    </div>
+                  )}
+
                   {/* 🚀 Submit Button */}
                   <button 
                     type="submit" 
-                    className="mt-2 halo-btn rounded-xl py-3.5 text-sm font-semibold bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border border-white/15 hover:opacity-95 transition-opacity"
+                    disabled={loading}
+                    className="mt-2 halo-btn rounded-xl py-3.5 text-sm font-semibold bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border border-white/15 hover:opacity-95 transition-opacity disabled:opacity-50"
                   >
-                    {selectedPlan === "custom" ? "Initialize Custom Build Scoping" : "Request Pipeline Access"}
+                    {loading ? "Transmitting Parameters..." : selectedPlan === "custom" ? "Initialize Custom Build Scoping" : "Request Pipeline Access"}
                   </button>
                 </form>
               ) : (

@@ -1,23 +1,135 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteShell } from "@/components/SiteShell";
 import { Reveal } from "@/components/Reveal";
-import { RequirementsModal } from "@/components/RequirementsModal";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import logo from "@/assets/lorpulse-logo.png";
 
 const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+const BACKEND_URL = "http://127.0.0.1:8000";
 
 export default function App() {
   const [modal, setModal] = useState<null | "core">(null);
   const [y, setY] = useState(0);
   const navigate = useNavigate();
 
+  // ─── CREDIT SYSTEM STATES ─────────────────────────────────
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [authEmail, setAuthEmail] = useState("");
+  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [creditsLeft, setCreditsLeft] = useState(0);
+  
+  // ─── ENGINE SCAN STATES ───────────────────────────────────
+  const [niche, setNiche] = useState("");
+  const [city, setCity] = useState("");
+  const [scanStatus, setScanStatus] = useState<"idle" | "processing" | "completed">("idle");
+  const [leadsFound, setLeadsFound] = useState(0);
+  const [campaignId, setCampaignId] = useState<number | null>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     const onScroll = () => setY(window.scrollY);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, []);
+
+  // 🛠️ 1. تحقق من إيميل المستخدم والـ Credits دياولو ف الداتا بيز
+  const handleVerifyIdentity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authEmail.trim()) return;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/user/credits?email=${encodeURIComponent(authEmail.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCreditsLeft(data.credits_left);
+        setVerifiedEmail(authEmail.trim());
+      } else {
+        // حساب جديد بـ 5,000 credit تلقائية بعد الدفع الأول
+        setCreditsLeft(5000);
+        setVerifiedEmail(authEmail.trim());
+      }
+      setShowSyncModal(false);
+      setModal("core"); // فتح لوحة التحكم د الكراولر ديريكت مورا التاكيد
+    } catch (err) {
+      alert("🚨 Cannot link to the LorPulse core database layer. Ensure backend is active.");
+    }
+  };
+
+  // ⚡ 2. إطلاق مصفوفة الكراولر (Launch Live Lead Scan)
+  const handleLaunchScan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (creditsLeft <= 0) {
+      alert("⚠️ Operational halt: Credit balance is empty. Top up your ledger package.");
+      return;
+    }
+
+    setScanStatus("processing");
+    setLeadsFound(0);
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan_type: "Pulse Core Credits",
+          niche: niche,
+          city: city,
+          email: verifiedEmail,
+          target_leads: creditsLeft * 10 // تحويل الكريديت لعدد الـ Leads الأقصى (كل 1 كريديت بـ 10 حبات)
+        }),
+      });
+
+      if (res.status === 202) {
+        const data = await res.json();
+        setCampaignId(data.campaign_id);
+        startLivePolling(data.campaign_id);
+      } else {
+        setScanStatus("idle");
+        alert("🚨 Extraction pipeline rejected by core engine routing.");
+      }
+    } catch (err) {
+      setScanStatus("idle");
+      alert("🚨 Connection failure with the asynchronous node runner.");
+    }
+  };
+
+  // 📊 3. تتبع الـ Status والـ العداد لايف (Live Real-Time Polling)
+  const startLivePolling = (id: number) => {
+    pollingRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/campaign/${id}/status`);
+        if (res.ok) {
+          const data = await res.json();
+          setLeadsFound(data.leads_found);
+
+          if (data.status === "waiting_for_payment" || data.status === "completed") {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+            setScanStatus("completed");
+            
+            // 📥 تحميل الـ CSV تلقائياً ف برواوزر د الكليان نيشان!
+            window.location.href = `${BACKEND_URL}/api/campaign/${id}/download`;
+            
+            // خصم الكريديت ديريكت ف الـ UI (كل 10 داتا بـ 1 credit)
+            const unitsBurned = Math.ceil(data.leads_found / 10);
+            setCreditsLeft((prev) => Math.max(0, prev - unitsBurned));
+          } else if (data.status === "failed") {
+            if (pollingRef.current) clearInterval(pollingRef.current);
+            setScanStatus("idle");
+            alert("Matrix complete: Zero records fetched for this specific target quadrant.");
+          }
+        }
+      } catch (err) {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+      }
+    }, 3000);
+  };
 
   return (
     <PayPalScriptProvider options={{ "client-id": paypalClientId || "", components: "buttons" }}>
@@ -73,9 +185,9 @@ export default function App() {
               <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   ["98.4%", "Email deliverability"],
-                  ["Up to 1k", "Leads per batch"], // 🔥 ردينالها تل لـ 1000 حبة كحد أقصى
+                  ["Asymmetric", "Credit Ledger Scan"], 
                   ["12k+", "Niches mapped"],
-                  ["Dynamic", "Pay-as-you-go price"], // 🔥 تبيان التسعير الديناميكي من الدخلة
+                  ["0/5000", "Initial Credit Allocations"], 
                 ].map(([k, v]) => (
                   <div key={v} className="glass halo rounded-2xl px-5 py-5 text-left">
                     <div className="font-display text-2xl text-glow">{k}</div>
@@ -100,7 +212,6 @@ export default function App() {
               </div>
             </Reveal>
 
-            {/* Two-pillar overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
               <Reveal delay={0}>
                 <div className="glass halo rounded-2xl p-7 flex flex-col gap-4 relative overflow-hidden min-h-[240px]">
@@ -110,7 +221,7 @@ export default function App() {
                   <p className="text-sm text-muted-foreground">Tell us your niche and country. Our pipeline scrapes, validates, enriches, and delivers decision-maker contacts in CSV — straight to your browser and inbox.</p>
                   <div className="mt-auto inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs">
                     <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.18_300)] animate-pulseGlow" />
-                    Metered · $0.014 / Lead · Max $14
+                    Credit Managed · 1 Unit / 10 Verified Hits
                   </div>
                 </div>
               </Reveal>
@@ -128,14 +239,13 @@ export default function App() {
               </Reveal>
             </div>
 
-            {/* Feature grid */}
             <div className="grid grid-cols-12 gap-4 sm:gap-5">
               <Reveal className="col-span-12 md:col-span-7" delay={0}>
                 <FeatureCard
                   tag="Intent-Driven Intelligence"
                   title="Buyers ready in the next 30 days"
                   body="Surface accounts triggering hiring spikes, funding signals, vendor switches, and product launches — scored 0–100 by our intent model."
-                  stat="Up to 1,000 Verified Leads per Pipeline Run"
+                  stat="Asymmetric Global Credit Scan Framework Active"
                   tall
                 />
               </Reveal>
@@ -145,30 +255,6 @@ export default function App() {
                   title="Systems that work while you sleep"
                   body="We build multi-step AI agents that prospect, qualify, enrich, and route leads autonomously — no human bottleneck in the loop."
                   stat="Custom-engineered per business"
-                />
-              </Reveal>
-              <Reveal className="col-span-12 md:col-span-4" delay={120}>
-                <FeatureCard
-                  tag="Niche-Specific Scraping"
-                  title="Industry corridors, hand-mapped"
-                  body="From Series-B AI infra to Dubai luxury brokers — dedicated scrapers per vertical, refreshed continuously."
-                  stat="12,000+ niches mapped"
-                />
-              </Reveal>
-              <Reveal className="col-span-12 md:col-span-4" delay={160}>
-                <FeatureCard
-                  tag="Full-Stack SaaS Builds"
-                  title="Your product, engineered end-to-end"
-                  body="Dashboards, portals, internal tools — production-ready code, deployed fast, built exactly to spec."
-                  stat="Custom scoping & architecture"
-                />
-              </Reveal>
-              <Reveal className="col-span-12 md:col-span-4" delay={200}>
-                <FeatureCard
-                  tag="AI Personalization Loop"
-                  title="{First_Name} that actually lands"
-                  body="Drop a template — we render contextual openers per contact using live enrichment data, ready for your sender."
-                  stat="Avg. 4.2× reply lift"
                 />
               </Reveal>
             </div>
@@ -183,7 +269,7 @@ export default function App() {
                 <p className="text-xs uppercase tracking-[0.3em] text-[oklch(0.78_0.18_300)]">Deploy With Us</p>
                 <h2 className="mt-3 font-display text-4xl sm:text-5xl font-semibold">Pick your mode of operation.</h2>
                 <p className="mt-4 text-muted-foreground">
-                  Need leads today? Launch the pipeline instantly. Need a full system built? Let's architect it together.
+                  Need leads today? Launch the pipeline instantly using your token ledger balance. Need a full system built? Let's architect it together.
                 </p>
               </div>
             </Reveal>
@@ -192,20 +278,23 @@ export default function App() {
               <Reveal>
                 <PricingCard
                   badge="Pulse Core — Lead Intelligence"
-                  price="Metered" // 🔥 حيدنا الـ $10 الثابتة باش الكليان يفهم الميترينغ
-                  cadence="$0.014 / verified lead"
-                  headline="Up to 1,000 Verified Leads."
-                  subtitle="Scraped live and priced instantly based on real-world regional availability. You only pay for what our engine extracts from your target location."
+                  price="Credits" 
+                  cadence="5,000 unit allocation"
+                  headline="Execute Endless Deep Hunts."
+                  subtitle="No rigid upfront per-batch limitations. Authenticate your vector email profile, spin up the multi-node crawler matrix, and extract clean business records directly against your master ledger."
                   features={[
-                    "Pay-as-you-go dynamic metering ($14.00 total cap)",
-                    "Minimum of 50 up to 1,000 verified leads maximum",
-                    "Target any local country, region or global corridor",
-                    "Universal AI Expansion Matrix triggered on shortfalls",
-                    "Live crawled, deduplicated, and deeply validated",
-                    "Instant browser CSV unlock + email storage backup",
+                    "Unified Credit Balance Ledger (5,000 units initial)",
+                    "Proportional metering: 1 token deducted per 10 verified leads discovered",
+                    "Target any local city, industrial corridor, or global node",
+                    "Universal AI Expansion Matrix automatically activated on shortfalls",
+                    "Live crawled, deeply validated, and triple-filtered structure",
+                    "Instant browser CSV injection unlock + secure email document delivery",
                   ]}
-                  ctaLabel="LAUNCH LIVE SCAN — PAY AS YOU GO"
-                  onClick={() => setModal("core")}
+                  ctaLabel="LAUNCH LIVE LEAD SCAN"
+                  onClick={() => {
+                    if (verifiedEmail) setModal("core");
+                    else setShowSyncModal(true);
+                  }}
                 />
               </Reveal>
               <Reveal delay={100}>
@@ -228,46 +317,140 @@ export default function App() {
                 />
               </Reveal>
             </div>
-
-            <Reveal delay={200}>
-              <p className="text-center text-xs text-muted-foreground mt-8">
-                Every Core pipeline execution initializes a live dynamic query node. No upfront payment required until results are fetched.
-              </p>
-            </Reveal>
           </div>
         </section>
 
-        {/* ─── BOTTOM CTA ────────────────────────────────────────────── */}
-        <section className="px-5 py-24">
-          <Reveal>
-            <div className="mx-auto max-w-5xl glass-strong halo rounded-3xl px-8 py-14 text-center relative overflow-hidden">
-              <div className="absolute -inset-px rounded-3xl pointer-events-none bg-[radial-gradient(600px_200px_at_50%_-20%,rgba(168,120,255,0.35),transparent)]" />
-              <p className="text-xs uppercase tracking-[0.3em] text-[oklch(0.78_0.18_300)] mb-4">Ready to move?</p>
-              <h3 className="font-display text-3xl sm:text-4xl font-semibold">
-                Tell us your problem.<br />We'll engineer the answer.
-              </h3>
-              <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-                Whether it's a lead list you need today or an entire autonomous system you've been putting off building — LorPulse deploys solutions fast, built to outlast the trend.
-              </p>
-              <div className="mt-7 flex justify-center gap-3 flex-wrap">
-                <Link
-                  to="/contact"
-                  className="halo-btn rounded-xl px-6 py-3 text-sm font-semibold bg-gradient-to-b from-[oklch(0.62_0.24_305)] to-[oklch(0.45_0.22_290)] border border-white/15"
-                >
-                  Build Something Custom
-                </Link>
-                <a
-                  href="#pricing"
-                  className="halo-btn rounded-xl px-6 py-3 text-sm font-medium glass"
-                >
-                  Get Leads Instantly →
-                </a>
+        {/* ─── INTERACTIVE CREDIT ENGINE CONSOLE (MODAL OVERLAY) ─────── */}
+        {modal === "core" && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden halo">
+              
+              {/* Top Credit Status Indicator */}
+              <div className="absolute top-5 right-6 flex items-center gap-1.5 bg-indigo-950/60 border border-indigo-500/30 px-3 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[11px] font-mono font-bold text-indigo-300">
+                  {Math.floor(leadsFound / 10)} / {creditsLeft} Credits Left
+                </span>
               </div>
-            </div>
-          </Reveal>
-        </section>
 
-        {modal === "core" && <RequirementsModal plan="core" onClose={() => setModal(null)} />}
+              {/* Console Branding Header */}
+              <div className="mb-6">
+                <h3 className="text-base font-bold text-white tracking-wide">Onboarding Setup</h3>
+                <p className="text-[11px] text-slate-400 mt-0.5 font-mono">{verifiedEmail}</p>
+              </div>
+
+              {/* 🟢 MODE A: IDLE / FORM SUBMISSION */}
+              {scanStatus === "idle" && (
+                <form onSubmit={handleLaunchScan} className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-400 uppercase tracking-wider mb-1">Target Niche / Industry Corridor</label>
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder="e.g. Artificial Intelligence Startup" 
+                      value={niche} 
+                      onChange={(e) => setNiche(e.target.value)} 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-400 uppercase tracking-wider mb-1">Target City / Geo-Location</label>
+                    <input 
+                      type="text" 
+                      required 
+                      placeholder="e.g. San Francisco" 
+                      value={city} 
+                      onChange={(e) => setCity(e.target.value)} 
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition" 
+                    />
+                  </div>
+
+                  {/* ⚠️ Dynamic Guardrail Disclaimer Text */}
+                  <p className="text-[10px] text-amber-500/90 leading-relaxed bg-amber-950/30 border border-amber-900/40 rounded-xl p-3 mt-2">
+                    ⚠️ <span className="font-bold">System Metric Warning:</span> Highly specific technical niches or locked geographic clusters may yield lower raw totals based on indexing transparency. Review your parameters carefully before deploying the query engine nodes.
+                  </p>
+
+                  <div className="flex gap-2 pt-2">
+                    <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-3 rounded-xl transition tracking-wider shadow-lg shadow-indigo-600/10">
+                      Launch Live Lead Scan →
+                    </button>
+                    <button type="button" onClick={() => setModal(null)} className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-4 rounded-xl transition">
+                      Close
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* ⏳ MODE B: THE CORRECT, POLISHED PROCESSING/WAITING STACK */}
+              {scanStatus === "processing" && (
+                <div className="py-8 flex flex-col items-center justify-center space-y-5 animate-pulseFast">
+                  <div className="relative w-14 h-14">
+                    <div className="absolute inset-0 rounded-full border-2 border-indigo-500/10" />
+                    <div className="absolute inset-0 rounded-full border-2 border-t-indigo-500 animate-spin" />
+                  </div>
+                  <div className="text-center space-y-1">
+                    <h4 className="text-sm font-bold text-white tracking-wider">Executing Async Owner Extraction...</h4>
+                    <p className="text-[11px] text-slate-400 font-mono">Querying data layers and stripping verified emails...</p>
+                  </div>
+                  
+                  {/* Real-time Dynamic Counters */}
+                  <div className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-center font-mono">
+                    <span className="text-3xl font-black text-emerald-400 tracking-tight">{leadsFound}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest block mt-1">Verified B2B Leads Parsed</span>
+                  </div>
+                </div>
+              )}
+
+              {/* 🎉 MODE C: EXTRACTION OPERATION COMPLETE */}
+              {scanStatus === "completed" && (
+                <div className="py-6 text-center space-y-5">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400 text-lg font-bold">✓</div>
+                  <div>
+                    <h3 className="text-base font-bold text-white tracking-wide">Operation Asset Executed Successfully!</h3>
+                    <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                      Extracted <span className="text-emerald-400 font-bold font-mono">{leadsFound}</span> verified rows. Check your operating system downloads directory and email routing records.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setScanStatus("idle")} className="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2.5 rounded-xl transition">
+                      Run Next Sector Scan
+                    </button>
+                    <button onClick={() => setModal(null)} className="bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-400 text-xs font-medium px-4 rounded-xl transition">
+                      Exit Console
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        )}
+
+        {/* 🔐 ID PROMPT POPUP: Already Existing Operator Check? */}
+        {showSyncModal && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative halo">
+              <h3 className="text-sm font-bold text-white tracking-wide">Already Exist Profile?</h3>
+              <p className="text-xs text-slate-400 mt-1 mb-4">Input your registered deployment email to sync your secure credit balance directly into this session layer.</p>
+              <form onSubmit={handleVerifyIdentity} className="space-y-3">
+                <input 
+                  type="email" 
+                  required 
+                  placeholder="operator@company.com" 
+                  value={authEmail} 
+                  onChange={(e) => setAuthEmail(e.target.value)} 
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-indigo-500 transition" 
+                />
+                <div className="flex gap-2 pt-2">
+                  <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg transition tracking-wide">Sync Balance Profile</button>
+                  <button type="button" onClick={() => { setVerifiedEmail(`guest_${Date.now()}@lorpulse.internal`); setCreditsLeft(5000); setShowSyncModal(false); setModal("core"); }} className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium px-3 rounded-lg transition">New Instance</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
       </SiteShell>
     </PayPalScriptProvider>
   );
