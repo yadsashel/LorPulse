@@ -13,7 +13,6 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     city: "",
   });
   
-  // 📈 تفعيل الـ Slider بمدى مخصص (من 50 إلى 1000) مع قيمة افتراضية 500 حبة
   const [targetLeads, setTargetLeads] = useState<number>(500);
   const [dynamicPrice, setDynamicPrice] = useState<string>("7.00");
 
@@ -22,20 +21,16 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState<"details" | "payment" | "processing_live">("details");
 
-  // 🔄 Live Background Crawler Tracking Progress
   const [progress, setProgress] = useState(0);
   const [loadingStatusText, setLoadingStatusText] = useState("Touring Web Corridors...");
   const [liveLeadsFound, setLiveLeadsFound] = useState(0);
   const [backendCampaignId, setBackendCampaignId] = useState<number | null>(null);
 
-  // 🔐 Hidden Admin Bypass (Unlimited Free Owner Access)
   const [isOwnerMode, setIsOwnerMode] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
-  // تحديث الثمن تلقائياً لايف فاش الكليان تيحرك الـ Slider
   useEffect(() => {
     const rawPrice = targetLeads * 0.014;
-    // حد أقصى $14.00 للتأكيد والتحصين
     const finalPrice = Math.min(rawPrice, 14.00).toFixed(2);
     setDynamicPrice(finalPrice);
   }, [targetLeads]);
@@ -68,11 +63,10 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     setIsFormValid(valid);
   };
 
-  // 📥 Live Polling Loop for Crawler Status Updates
   const startPollingCampaign = (campaignId: number, maxTarget: number) => {
     setBackendCampaignId(campaignId);
     setStep("processing_live");
-    setLoading(false); // Hide global absolute loading overlay to expose live dashboard counters
+    setLoading(false); 
     setProgress(5);
     setLoadingStatusText("Deploying Autonomous Extraction Matrix...");
 
@@ -87,7 +81,6 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         const currentFound = data.leads_found || 0;
         setLiveLeadsFound(currentFound);
 
-        // حساب نسبة التقدم الحقيقية بناءً على ما وجده الكراولر مقارنة بالعدد لّي اختاره الكليان بالـ Slider
         const calcProgress = Math.min(Math.floor((currentFound / maxTarget) * 100), 99);
 
         if (data.status === "pending" || data.status === "processing") {
@@ -113,7 +106,6 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     }, 3500);
   };
 
-  // 🔍 الانتقال المباشر لخطوة الدفع بالاعتماد على المدخلات المحددة
   const launchLiveLeadScan = async () => {
     setLoading(true);
     setProgress(40);
@@ -125,7 +117,6 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
     }, 1000);
   };
 
-  // 🚀 Owner bypass (Processes instantly for free)
   const triggerOwnerBypass = async () => {
     setLoading(true);
     setProgress(5);
@@ -144,17 +135,22 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
         }),
       });
 
+      if (response.status === 202) {
+        const data = await response.json();
+        startPollingCampaign(data.campaign_id, targetLeads);
+      } else {
+        setLoading(false);
+      }
     } catch (error) {
       console.error("Owner pipeline execution failed:", error);
       setLoading(false);
     }
   };
 
-  // 💳 تفعيل الباكيند بعد الدفع مباشرة بالعدد المحدد من الـ Slider
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
     setProgress(5);
-    setLoadingStatusText("Injecting secure payload & allocating extraction threads...");
+    setLoadingStatusText("Injecting secure payload & allocating extraction threads... ");
     try {
       const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
         method: "POST",
@@ -415,11 +411,19 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                 <div className="text-xs uppercase tracking-widest text-purple-400 font-medium mb-1.5">
                   Autonomous Target Dashboard
                 </div>
-                <h4 className="font-display text-xl font-semibold text-white tracking-tight mb-4">
+                <h4 className="font-display text-xl font-semibold text-white tracking-tight mb-2">
                   Crawler ID: #{backendCampaignId}
                 </h4>
 
-                <div className="grid grid-cols-2 gap-4 my-6 bg-zinc-900/50 border border-zinc-900 p-4 rounded-2xl">
+                {/* 📦 هادي هي الخانة الجديدة لي كاتبين للكليان بلي راه ديجا مسجل وبلي الإيميل ديالو محفوظ غادي يوصلو فيه الملف */}
+                <div className="mb-4 bg-purple-950/20 border border-purple-900/30 px-3 py-2 rounded-xl inline-flex items-center gap-2 max-w-full">
+                  <span className="text-[10px] text-purple-400 uppercase tracking-wider font-mono">Registered Email:</span>
+                  <span className="text-xs font-semibold text-zinc-300 font-mono truncate max-w-[180px]" title={formData.email}>
+                    {formData.email || "Syncing..."}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 my-4 bg-zinc-900/50 border border-zinc-900 p-4 rounded-2xl">
                   <div className="text-left border-r border-zinc-800/80 pr-2">
                     <span className="block text-[10px] uppercase tracking-wider text-zinc-500 font-medium">Live Extracted</span>
                     <span className="text-2xl font-bold text-white font-mono">{liveLeadsFound}</span>
@@ -442,7 +446,7 @@ export function RequirementsModal({ onClose }: RequirementsModalProps) {
                 </p>
 
                 <p className="text-[11px] text-zinc-500 leading-relaxed max-w-xs mx-auto mt-4">
-                  Mining and parsing system threads in real-time. Closing the node window will not abort the backend micro-crawler stream.
+                  Mining and parsing system threads in real-time. Closing the node window will not abort the backend micro-crawler stream. We will deliver the final verified list directly to your inbox.
                 </p>
               </div>
             ) : null}
