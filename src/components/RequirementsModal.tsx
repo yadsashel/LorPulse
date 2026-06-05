@@ -61,6 +61,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
       return;
     }
 
+    loadingStatusText
     setLoading(true);
     setLoadingStatusText("Querying Supabase Ledger Corridors...");
     
