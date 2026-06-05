@@ -7,6 +7,8 @@ interface RequirementsModalProps {
   onClose: () => void;
 }
 
+const FOUNDER_EMAILS = ["webusineservices@gmail.com"];
+
 export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [formData, setFormData] = useState({
     email: "",
@@ -51,9 +53,10 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }
   };
 
-  // 🔍 Check if client email already exists within Supabase campaigns infrastructure
+  // 🔍 Check if client email already exists within Supabase profiles infrastructure
   const verifyOperatorEmail = async () => {
-    if (!formData.email.includes("@")) {
+    const emailClean = formData.email.trim().toLowerCase();
+    if (!emailClean.includes("@")) {
       alert("Please enter a valid email address.");
       return;
     }
@@ -61,35 +64,61 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     setLoading(true);
     setLoadingStatusText("Querying Supabase Ledger Corridors...");
     
+    // ⚡ Direct Founder Detection & Immediate Bypass Injection
+    if (FOUNDER_EMAILS.includes(emailClean)) {
+      setIsExistingUser(true);
+      setCreditsLeft(5000);
+      setIsOwnerMode(true);
+      localStorage.setItem("lorpulse_owner_access", "true");
+      setRegistrationNotice(null);
+      alert("👋 Welcome back Founder! Direct structural synchronization initiated.");
+      setStep("details");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { data, error } = await supabase
-        .from("campaigns")
-        .select("leads_count") // or whichever field stores rows or lead counts
-        .eq("email", formData.email.trim().toLowerCase());
+      // 1. Verify if user profile exists anywhere in the platform logs
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("email", emailClean);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
-      if (data && data.length > 0) {
-        // Existing user protocol initiated
-        setIsExistingUser(true);
-        setRegistrationNotice(null);
-
-        // 📊 Calculate remaining credits (1 credit used for every 10 leads pulled across all historic campaigns)
-        const totalLeadsExtracted = data.reduce((sum, item) => sum + (Number(item.leads_count) || 0), 0);
-        const creditsConsumed = Math.floor(totalLeadsExtracted / 10);
-        const calculatedRemaining = Math.max(0, 5000 - creditsConsumed);
-        
-        setCreditsLeft(calculatedRemaining);
-        setStep("details");
-      } else {
-        // New user protocol initiated
+      if (!profileData || profileData.length === 0) {
+        // Strict blocking protocol for unregistered identities
         setIsExistingUser(false);
-        setRegistrationNotice("🚨 Profile not registered. You must complete your initial registration below to unlock your 5,000 credit liftoff pool.");
-        setStep("details");
+        setCreditsLeft(0);
+        setRegistrationNotice("🚨 Account Identity Not Found. Please register this email address first to synchronize system allocation matrix (Current Balance: 0/5000 credits).");
+        alert("🚨 Access Denied: This email is not registered in our core framework database. Credits available: 0/5000.");
+        setLoading(false);
+        return;
       }
+
+      // 2. Existing registered user protocol initiated safely -> pull historic database rows
+      const { data: campaignData, error: campaignError } = await supabase
+        .from("campaigns")
+        .select("leads_found") // Correct column synchronized to prevent status 400 anomalies
+        .eq("email", emailClean);
+
+      if (campaignError) throw campaignError;
+
+      setIsExistingUser(true);
+      setRegistrationNotice(null);
+      alert("👋 Welcome back Operator! Access parameters authorized successfully.");
+
+      // Calculate historical usage footprint securely
+      const totalLeadsExtracted = campaignData ? campaignData.reduce((sum, item) => sum + (Number(item.leads_found) || 0), 0) : 0;
+      const creditsConsumed = Math.floor(totalLeadsExtracted / 10);
+      const calculatedRemaining = Math.max(0, 5000 - creditsConsumed);
+      
+      setCreditsLeft(calculatedRemaining);
+      setStep("details");
+
     } catch (err) {
       console.error("Supabase engine synchronization error:", err);
-      // Fail-safe fallback to allow progress if database encounters unexpected downtime
+      alert("Database connection timed out. Re-routing through local proxy.");
       setIsExistingUser(false);
       setStep("details");
     } finally {
@@ -111,6 +140,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
   // 📥 Live Polling Loop for Completion & Download
   const startPollingCampaign = (campaignId: number) => {
+    setBackendCampaignId(campaignId);
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
@@ -119,18 +149,28 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
         if (!res.ok) return;
 
         const data = await res.json();
+        const currentLeads = data.leads_found || data.leads_count || 0;
 
         if (data.status === "processing") {
-          setProgress(data.progress);
-          setLoadingStatusText(`Extracting B2B Corporate Leads: ${data.progress}%`);
-        } else if (data.status === "completed") {
+          // Dynamic calculation matrix to fix undefined rendering metrics out of 500 targets
+          const calculatedProgress = Math.min(99, Math.max(8, Math.floor((currentLeads / 500) * 100)));
+          setProgress(calculatedProgress);
+          setLoadingStatusText(`Extracting B2B Corporate Leads: ${currentLeads}/500 (${calculatedProgress}%)`);
+        } 
+        else if (data.status === "completed" || (isOwnerMode && data.status === "waiting_for_payment")) {
           setProgress(100);
           setLoadingStatusText("✅ Compilation 100% Complete! Triggering auto-download...");
           clearInterval(interval);
           window.location.href = `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/download`;
           setSuccess(true);
           setLoading(false);
-        } else if (data.status === "failed") {
+        } 
+        else if (data.status === "waiting_for_payment" && !isOwnerMode) {
+          // Keep computing client visibility if they haven't paid yet but the file is compiled
+          setProgress(100);
+          setLoadingStatusText("⚠️ Extraction Pool Frozen. Awaiting PayPal processing verification token...");
+        }
+        else if (data.status === "failed") {
           clearInterval(interval);
           setLoading(false);
           alert("🚨 Pipeline extraction hit a wall for this specific criteria. Verify your niche string.");
@@ -147,7 +187,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     setProgress(20);
     setLoadingStatusText("Initializing Local Extractor Nodes...");
     
-    // محاكاة سريعة ومثيرة للـ Live Scan قبل الدفع باش الكليان يشوف النتيجة ويتحمس
     setTimeout(() => {
       setProgress(60);
       setLoadingStatusText(`Mapping data corridors for "${formData.niche}"...`);
@@ -157,11 +196,9 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
         setDetectedLeads(leads);
         setLoading(false);
 
-        if (isExistingUser) {
-          // Returning paid accounts bypass the checkout screen completely and initialize nodes immediately using credit pools
+        if (isExistingUser && creditsLeft > 50) {
           triggerCreditDeductionPipeline();
         } else {
-          // New operators go directly to the flat $10 checkout pass window
           setStep("payment");
         }
       }, 1500);
@@ -183,6 +220,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           city: formData.city,
           email: formData.email.trim().toLowerCase(),
           paypal_order_id: `CREDIT_POOL_REDEEM_${Date.now()}`,
+          target_leads: 500
         }),
       });
 
@@ -190,7 +228,8 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
         const data = await response.json();
         startPollingCampaign(data.campaign_id);
       } else {
-        alert("Credit redemption sequence failed on the core backend cluster node.");
+        const errData = await response.json();
+        alert(errData.detail || "Credit redemption sequence failed on the core backend cluster node.");
         setLoading(false);
       }
     } catch (error) {
@@ -204,7 +243,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const triggerOwnerBypass = async () => {
     setLoading(true);
     setProgress(5);
-    setLoadingStatusText("Initializing Secure Async Pipeline Node...");
+    setLoadingStatusText("Initializing Secure Async Founder Pipeline Node...");
     try {
       const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
         method: "POST",
@@ -213,8 +252,9 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           plan_type: plan,
           niche: formData.niche,
           city: formData.city,
-          email: formData.email,
+          email: formData.email.trim().toLowerCase(),
           paypal_order_id: `OWNER_ASYNC_HUNT_${Date.now()}`,
+          target_leads: 500
         }),
       });
 
@@ -247,6 +287,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           city: formData.city,
           email: formData.email.trim().toLowerCase(),
           paypal_order_id: orderId,
+          target_leads: 500
         }),
       });
 
@@ -299,6 +340,12 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                   Provide your active node delivery coordinates to check database logs and credit balances.
                 </p>
 
+                {registrationNotice && (
+                  <div className="mb-4 text-xs p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 leading-relaxed">
+                    {registrationNotice}
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-[10px] uppercase tracking-wider text-zinc-400 font-medium mb-1.5">
@@ -332,15 +379,14 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
             {/* STEP 2: PIPELINE CONFIGURATION FORM */}
             {step === "details" && (
               <div className="animate-fadeIn relative">
-                {/* Dynamic Credit Counter Status View */}
                 <div className="absolute top-0 right-0 text-right">
                   {isExistingUser ? (
                     <span className="text-xs font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-md">
                       ⚡ {creditsLeft.toLocaleString()} Credits Left
                     </span>
                   ) : (
-                    <span className="text-xs font-mono font-medium text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-1 rounded-md">
-                      🎁 5,000 Credits Pass Pending
+                    <span className="text-xs font-mono font-medium text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-md">
+                      ⚠️ 0 / 5,000 Credits Locked
                     </span>
                   )}
                 </div>
@@ -360,15 +406,8 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                 </h3>
 
                 <p className="text-xs text-zinc-400 mt-1 mb-4">
-                  Pulse Core Plan — {isExistingUser ? "Redeeming existing runtime quotas." : "Metered Pricing Access."}
+                  Pulse Core Plan — {isOwnerMode ? "Unlimited Founder Infrastructure Access." : isExistingUser ? "Redeeming remaining runtime quotas." : "Metered Pricing Access."}
                 </p>
-
-                {/* Conditional Registration Warning Notice */}
-                {registrationNotice && (
-                  <div className="mb-4 text-xs p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 leading-relaxed animate-pulse">
-                    {registrationNotice}
-                  </div>
-                )}
 
                 <div className="space-y-4">
                   <div>
@@ -378,9 +417,9 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                     <input
                       type="email"
                       name="email"
+                      disabled={true}
                       value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600 opacity-80"
+                      className="w-full bg-zinc-900/50 border border-zinc-800/80 p-3 rounded-xl text-sm text-zinc-500 cursor-not-allowed select-none"
                       placeholder="operator@agency.com"
                     />
                   </div>
@@ -394,7 +433,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                       value={formData.niche}
                       onChange={handleInputChange}
                       className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
-                      placeholder="e.g., Series-A SaaS, Dubai Real Estate"
+                      placeholder="e.g., Luxury Real Estate Brokers, Medical Spas"
                     />
                   </div>
                   <div>
@@ -407,14 +446,14 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                       value={formData.city}
                       onChange={handleInputChange}
                       className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
-                      placeholder="e.g., USA, UK, San Francisco, London"
+                      placeholder="e.g., London, Houston, New York"
                     />
                   </div>
 
                   <button
                     disabled={!isFormValid}
                     onClick={() => {
-                      if (isOwnerMode) {
+                      if (isOwnerMode || FOUNDER_EMAILS.includes(formData.email.trim().toLowerCase())) {
                         triggerOwnerBypass();
                       } else {
                         launchLiveLeadScan();
@@ -426,13 +465,13 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                         : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"
                     }`}
                   >
-                    {isOwnerMode ? "Execute Async Owner Extraction ⚡" : "Launch Live Lead Scan →"}
+                    {isOwnerMode || FOUNDER_EMAILS.includes(formData.email.trim().toLowerCase()) ? "Execute Async Owner Extraction ⚡" : "Launch Live Lead Scan →"}
                   </button>
                 </div>
               </div>
             )}
 
-            {/* STEP 3: FLAT RATE SECURED CHECKOUT ($10 PASS FOR ALL 5,000 CREDITS) */}
+            {/* STEP 3: FLAT RATE SECURED CHECKOUT */}
             {step === "payment" && (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
                 <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
@@ -532,7 +571,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
             <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
               {isOwnerMode
                 ? `The compiled CSV dataset for ${formData.niche} has been automatically downloaded to your local drive.`
-                : `Success! Your specialized dataset containing ${detectedLeads} hyper-verified B2B leads has been unlocked and downloaded directly inside your browser. Concurrently, a secure link and backup copy have been dispatched to ${formData.email} via Brevo.`}
+                : `Success! Your specialized dataset containing verified B2B leads has been unlocked and downloaded directly inside your browser. Concurrently, a secure link and backup copy have been dispatched to ${formData.email} via Brevo.`}
             </p>
             <button
               onClick={onClose}
