@@ -118,7 +118,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
     } catch (err) {
       console.error("Supabase engine synchronization error:", err);
-      alert("Database connection timed out. Re-routing through local proxy.");
+      alert("New User Welcome!.");
       setIsExistingUser(false);
       setStep("details");
     } finally {
