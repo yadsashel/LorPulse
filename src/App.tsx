@@ -213,17 +213,20 @@ export default function App() {
               <Reveal delay={100}>
                 <PricingCard
                   featured
-                  badge="Custom AI & Automation Engineering"
-                  price="Custom"
-                  cadence="quoted per scope"
-                  headline="We Build the System Around You."
-                  subtitle="From autonomous agents to full SaaS products — we engineer exactly what your business needs to scale without hiring."
-                  features={[
-                    "Custom AI agents & multi-step automation flows",
-                    "Full-stack SaaS platforms & internal dashboards",
-                    "Advanced web scraping & data pipeline engineering",
-                    "Business-logic-specific architecture & deployment",
-                    "Dedicated senior dev support from scoping to ship",
+badge="Custom AI & Automation Engineering"
+price="Custom"
+cadence="quoted per scope"
+headline="We Build the System Around You."
+subtitle="From autonomous agents to full SaaS products — we engineer custom digital machinery so your business can scale infinitely without adding headcount."
+features={[
+  "Custom AI agents & multi-step automation flows",
+  "Full-stack SaaS platforms & internal web ecosystems",
+  "Advanced large-scale web scraping & continuous data pipeline engineering",
+  "Business-logic-specific architecture designed for heavy-duty production",
+  "100% Intellectual Property (IP) Ownership — you own every line of code forever",
+  "Zero-Maintenance Infra: We build bulletproof systems that run 24/7 on autopilot",
+  "White-Glove Architecture Integration: Smooth synchronization with your existing CRM/API systems",
+  "Dedicated Slack/Discord structural channel with senior devs from scoping to ship"
                   ]}
                   ctaLabel="START YOUR BUILD"
                   onClick={() => navigate("/contact")}
