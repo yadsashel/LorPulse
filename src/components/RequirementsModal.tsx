@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { PayPalButtons } from "@paypal/react-paypal-js";
-import { supabase } from "@/lib/supabase"; // Ensure your Supabase client is correctly configured here
+import { supabase } from "@/lib/supabase"; 
 
 interface RequirementsModalProps {
   plan: "core";
@@ -19,21 +19,17 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
-  // 🧭 Advanced Multi-step Flow Controls
   const [step, setStep] = useState<"email_check" | "details" | "payment">("email_check");
   const [isExistingUser, setIsExistingUser] = useState(false);
   const [creditsLeft, setCreditsLeft] = useState(5000);
   const [registrationNotice, setRegistrationNotice] = useState<string | null>(null);
 
-  // 🔄 Live Background Crawler Tracking Progress
   const [progress, setProgress] = useState(0);
   const [loadingStatusText, setLoadingStatusText] = useState("Touring Web Corridors...");
   
-  // 📈 Dynamic Scaling States
   const [detectedLeads, setDetectedLeads] = useState(0);
   const [backendCampaignId, setBackendCampaignId] = useState<number | null>(null);
 
-  // 🔐 Hidden Admin Bypass (Unlimited Free Owner Access)
   const [isOwnerMode, setIsOwnerMode] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
@@ -53,7 +49,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }
   };
 
-  // 🔍 Check if client email already exists within Supabase profiles infrastructure
   const verifyOperatorEmail = async () => {
     const emailClean = formData.email.trim().toLowerCase();
     if (!emailClean.includes("@")) {
@@ -61,11 +56,9 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
       return;
     }
 
-    loadingStatusText
     setLoading(true);
     setLoadingStatusText("Querying Supabase Ledger Corridors...");
     
-    // ⚡ Direct Founder Detection & Immediate Bypass Injection
     if (FOUNDER_EMAILS.includes(emailClean)) {
       setIsExistingUser(true);
       setCreditsLeft(5000);
@@ -79,7 +72,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }
 
     try {
-      // 1. Verify if user profile exists anywhere in the platform logs
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("email")
@@ -88,7 +80,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
       if (profileError) throw profileError;
 
       if (!profileData || profileData.length === 0) {
-        // Strict blocking protocol for unregistered identities
         setIsExistingUser(false);
         setCreditsLeft(0);
         setRegistrationNotice("🚨 Account Identity Not Found. Please register this email address first to synchronize system allocation matrix (Current Balance: 0/5000 credits).");
@@ -97,10 +88,9 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
         return;
       }
 
-      // 2. Existing registered user protocol initiated safely -> pull historic database rows
       const { data: campaignData, error: campaignError } = await supabase
         .from("campaigns")
-        .select("leads_found") // Correct column synchronized to prevent status 400 anomalies
+        .select("leads_found") 
         .eq("email", emailClean);
 
       if (campaignError) throw campaignError;
@@ -109,7 +99,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
       setRegistrationNotice(null);
       alert("👋 Welcome back Operator! Access parameters authorized successfully.");
 
-      // Calculate historical usage footprint securely
       const totalLeadsExtracted = campaignData ? campaignData.reduce((sum, item) => sum + (Number(item.leads_found) || 0), 0) : 0;
       const creditsConsumed = Math.floor(totalLeadsExtracted / 10);
       const calculatedRemaining = Math.max(0, 5000 - creditsConsumed);
@@ -139,13 +128,12 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     setIsFormValid(valid);
   };
 
-  // 📥 Live Polling Loop for Completion & Download
   const startPollingCampaign = (campaignId: number) => {
     setBackendCampaignId(campaignId);
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
-          `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/status`
+          `https://lorpulse-lorpusle-backend.hf.space/api/pulse/pulse-check/${campaignId}`
         );
         if (!res.ok) return;
 
@@ -153,7 +141,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
         const currentLeads = data.leads_found || data.leads_count || 0;
 
         if (data.status === "processing") {
-          // Dynamic calculation matrix to fix undefined rendering metrics out of 500 targets
           const calculatedProgress = Math.min(99, Math.max(8, Math.floor((currentLeads / 500) * 100)));
           setProgress(calculatedProgress);
           setLoadingStatusText(`Extracting B2B Corporate Leads: ${currentLeads}/500 (${calculatedProgress}%)`);
@@ -162,12 +149,11 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
           setProgress(100);
           setLoadingStatusText("✅ Compilation 100% Complete! Triggering auto-download...");
           clearInterval(interval);
-          window.location.href = `https://lorpulse-lorpusle-backend.hf.space/api/campaign/${campaignId}/download`;
+          window.location.href = `https://lorpulse-lorpusle-backend.hf.space/api/gate/retrieve-asset/${campaignId}`;
           setSuccess(true);
           setLoading(false);
         } 
         else if (data.status === "waiting_for_payment" && !isOwnerMode) {
-          // Keep computing client visibility if they haven't paid yet but the file is compiled
           setProgress(100);
           setLoadingStatusText("⚠️ Extraction Pool Frozen. Awaiting PayPal processing verification token...");
         }
@@ -182,7 +168,6 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }, 4000);
   };
 
-  // 🔍 Simulated or Initial Server Scan to find out how many leads exist
   const launchLiveLeadScan = async () => {
     setLoading(true);
     setProgress(20);
@@ -206,13 +191,12 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }, 1200);
   };
 
-  // 🔄 Automated existing user pipeline authorization using remaining credits
   const triggerCreditDeductionPipeline = async () => {
     setLoading(true);
     setProgress(5);
     setLoadingStatusText("Authorizing credit profile & injection paths...");
     try {
-      const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
+      const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/gate/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -240,13 +224,12 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }
   };
 
-  // 🚀 Owner bypass
   const triggerOwnerBypass = async () => {
     setLoading(true);
     setProgress(5);
     setLoadingStatusText("Initializing Secure Async Founder Pipeline Node...");
     try {
-      const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
+      const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/gate/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -273,13 +256,12 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
     }
   };
 
-  // 💳 Real client payment success (Flat rate: $10 for full access and 5,000 credits)
   const handleClientPaymentSuccess = async (orderId: string) => {
     setLoading(true);
     setProgress(5);
     setLoadingStatusText("Verifying capture & spawning extraction threads...");
     try {
-      const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/checkout", {
+      const response = await fetch("https://lorpulse-lorpusle-backend.hf.space/api/gate/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -294,6 +276,13 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
       if (response.status === 202) {
         const data = await response.json();
+        
+        await fetch(`https://lorpulse-lorpusle-backend.hf.space/api/gate/verify-settlement/${data.campaign_id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paypal_order_id: orderId })
+        });
+
         startPollingCampaign(data.campaign_id);
       } else {
         alert("Payment verified, but server pipeline initialization failed. Support notified.");
@@ -307,42 +296,42 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
       <div
-        className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/90 rounded-3xl p-6 sm:p-8 text-left shadow-2xl overflow-y-auto max-h-[95vh] ${
+        className={`relative w-full transition-all duration-300 bg-zinc-950 border border-zinc-800/90 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-left shadow-2xl my-auto max-h-[92vh] overflow-y-auto ${
           step === "payment" ? "max-w-4xl" : "max-w-md"
         }`}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm z-10"
+          className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 text-sm p-1 z-10 rounded-full hover:bg-zinc-900 transition-colors"
         >
           ✕
         </button>
 
         {!success ? (
           <>
-            {/* STEP 1: INITIAL OPERATOR VERIFICATION SCREEN */}
+            {/* STEP 1: OPERATOR VERIFICATION SCREEN */}
             {step === "email_check" && (
-              <div className="animate-fadeIn">
-                <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
+              <div className="animate-fadeIn w-full">
+                <div className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
                   Gateway Access
                 </div>
                 <h3
                   onClick={handleSecretClick}
-                  className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none mb-2"
+                  className="font-display text-xl sm:text-2xl font-semibold text-white tracking-tight cursor-default select-none mb-2 break-words"
                 >
                   Operator Verification
                   {isOwnerMode && (
-                    <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async)</span>
+                    <span className="block sm:inline text-emerald-400 text-xs sm:ml-2 mt-1 sm:mt-0">● Owner Mode (Async)</span>
                   )}
                 </h3>
-                <p className="text-xs text-zinc-400 mb-6">
+                <p className="text-xs text-zinc-400 mb-5 sm:mb-6 leading-relaxed">
                   Provide your active node delivery coordinates to check database logs and credit balances.
                 </p>
 
                 {registrationNotice && (
-                  <div className="mb-4 text-xs p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 leading-relaxed">
+                  <div className="mb-4 text-xs p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 leading-relaxed break-words">
                     {registrationNotice}
                   </div>
                 )}
@@ -357,7 +346,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                       name="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
+                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600 appearance-none"
                       placeholder="operator@agency.com"
                     />
                   </div>
@@ -365,7 +354,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                   <button
                     disabled={!formData.email.includes("@")}
                     onClick={verifyOperatorEmail}
-                    className={`mt-4 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${
+                    className={`mt-4 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 text-center ${
                       formData.email.includes("@")
                         ? "bg-white text-black hover:bg-zinc-200 cursor-pointer"
                         : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"
@@ -379,34 +368,34 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
             {/* STEP 2: PIPELINE CONFIGURATION FORM */}
             {step === "details" && (
-              <div className="animate-fadeIn relative">
-                <div className="absolute top-0 right-0 text-right">
+              <div className="animate-fadeIn relative w-full">
+                <div className="absolute top-0 right-0 text-right mt-1 sm:mt-0 z-10">
                   {isExistingUser ? (
-                    <span className="text-xs font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-md">
+                    <span className="text-[10px] sm:text-xs font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-md inline-block">
                       ⚡ {creditsLeft.toLocaleString()} Credits Left
                     </span>
                   ) : (
-                    <span className="text-xs font-mono font-medium text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-md">
-                      ⚠️ 0 / 5,000 Credits Locked
+                    <span className="text-[10px] sm:text-xs font-mono font-medium text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-md inline-block">
+                      ⚠️ 0 / 5,000 Locked
                     </span>
                   )}
                 </div>
 
-                <div className="text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium">
+                <div className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-purple-400 mb-1 font-medium pt-6 sm:pt-0">
                   Onboarding Setup
                 </div>
 
                 <h3
                   onClick={handleSecretClick}
-                  className="font-display text-2xl font-semibold text-white tracking-tight cursor-default select-none"
+                  className="font-display text-xl sm:text-2xl font-semibold text-white tracking-tight cursor-default select-none break-words"
                 >
                   Configure Pipeline{" "}
                   {isOwnerMode && (
-                    <span className="text-emerald-400 text-xs ml-1">● Owner Mode (Async)</span>
+                    <span className="block sm:inline text-emerald-400 text-xs sm:ml-2 mt-1 sm:mt-0">● Owner Mode (Async)</span>
                   )}
                 </h3>
 
-                <p className="text-xs text-zinc-400 mt-1 mb-4">
+                <p className="text-xs text-zinc-400 mt-1 mb-5 sm:mb-6 leading-relaxed">
                   Pulse Core Plan — {isOwnerMode ? "Unlimited Founder Infrastructure Access." : isExistingUser ? "Redeeming remaining runtime quotas." : "Metered Pricing Access."}
                 </p>
 
@@ -420,7 +409,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                       name="email"
                       disabled={true}
                       value={formData.email}
-                      className="w-full bg-zinc-900/50 border border-zinc-800/80 p-3 rounded-xl text-sm text-zinc-500 cursor-not-allowed select-none"
+                      className="w-full bg-zinc-900/50 border border-zinc-800/80 p-3 rounded-xl text-sm text-zinc-500 cursor-not-allowed select-none appearance-none"
                       placeholder="operator@agency.com"
                     />
                   </div>
@@ -433,8 +422,8 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                       name="niche"
                       value={formData.niche}
                       onChange={handleInputChange}
-                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
-                      placeholder="e.g., Luxury Real Estate Brokers, Medical Spas"
+                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600 appearance-none"
+                      placeholder="e.g., Luxury Real Estate Brokers"
                     />
                   </div>
                   <div>
@@ -446,8 +435,8 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                       name="city"
                       value={formData.city}
                       onChange={handleInputChange}
-                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600"
-                      placeholder="e.g., London, Houston, New York"
+                      className="w-full bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm text-white focus:outline-none focus:border-purple-500 transition-colors placeholder-zinc-600 appearance-none"
+                      placeholder="e.g., London, Houston"
                     />
                   </div>
 
@@ -460,7 +449,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
                         launchLiveLeadScan();
                       }
                     }}
-                    className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 ${
+                    className={`mt-6 w-full py-3.5 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 text-center ${
                       isFormValid
                         ? "bg-white text-black hover:bg-zinc-200 cursor-pointer shadow-lg shadow-white/5"
                         : "bg-zinc-900 text-zinc-500 cursor-not-allowed border border-zinc-800"
@@ -474,63 +463,65 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
 
             {/* STEP 3: FLAT RATE SECURED CHECKOUT */}
             {step === "payment" && (
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-slideIn pt-2">
-                <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-zinc-900 pb-6 md:pb-0 md:pr-6 flex flex-col justify-between">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 animate-slideIn pt-2 w-full">
+                <div className="md:col-span-5 border-b md:border-b-0 md:border-r border-zinc-900 pb-5 md:pb-0 md:pr-6 flex flex-col justify-between">
                   <div>
                     <button
                       onClick={() => setStep("details")}
-                      className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-6 transition-colors"
+                      className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 mb-4 sm:mb-6 transition-colors p-1"
                     >
                       ← Edit info
                     </button>
-                    <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">
+                    <div className="text-[10px] sm:text-xs uppercase tracking-wider text-zinc-500 font-medium mb-1">
                       One-Time Liftoff Pass
                     </div>
                     
                     <div className="flex items-baseline gap-2">
-                      <h4 className="text-4xl font-bold text-white tracking-tight">$10.00</h4>
+                      <h4 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">$10.00</h4>
                       <span className="text-xs text-zinc-500 font-mono">USD</span>
                     </div>
 
-                    <div className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 text-xs text-purple-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
-                      Unlocks full 5,000 lead package credits
+                    <div className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 text-[11px] text-purple-400 max-w-full">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-purple-400 animate-pulse" />
+                      <span className="truncate">Unlocks full 5,000 lead package credits</span>
                     </div>
 
-                    <div className="mt-6 space-y-3 bg-zinc-900/40 border border-zinc-900 p-4 rounded-xl text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-zinc-500">Access Type:</span>
-                        <span className="text-zinc-300 font-medium">Pay Once & For All</span>
+                    <div className="mt-5 space-y-2.5 bg-zinc-900/40 border border-zinc-900 p-3.5 sm:p-4 rounded-xl text-xs w-full overflow-hidden">
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-zinc-500 shrink-0">Access Type:</span>
+                        <span className="text-zinc-300 font-medium text-right">Pay Once & For All</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-zinc-500">Niche Target:</span>
-                        <span className="text-zinc-300 truncate max-w-[120px] font-medium">
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-zinc-500 shrink-0">Niche Target:</span>
+                        <span className="text-zinc-300 truncate max-w-[150px] font-medium text-right" title={formData.niche}>
                           {formData.niche}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-zinc-500">Target Geo:</span>
-                        <span className="text-zinc-300 font-medium">{formData.city}</span>
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-zinc-500 shrink-0">Target Geo:</span>
+                        <span className="text-zinc-300 truncate max-w-[150px] font-medium text-right" title={formData.city}>
+                          {formData.city}
+                        </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-zinc-500">Delivery Box:</span>
-                        <span className="text-zinc-300 truncate max-w-[120px] font-medium">
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-zinc-500 shrink-0">Delivery Box:</span>
+                        <span className="text-zinc-300 truncate max-w-[150px] font-medium text-right" title={formData.email}>
                           {formData.email}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-[10px] text-zinc-600 mt-6 hidden md:block">
+                  <div className="text-[10px] text-zinc-600 mt-5 hidden md:block leading-relaxed">
                     Secured via PayPal encryption layers. Lifetime access pool activation token inside.
                   </div>
                 </div>
 
-                <div className="md:col-span-7 flex flex-col justify-start w-full min-h-[380px]">
+                <div className="md:col-span-7 flex flex-col justify-start w-full min-h-[320px] sm:min-h-[380px]">
                   <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-400 mb-4 px-1">
                     Select Secured Payment Method
                   </h4>
 
-                  <div className="w-full block overflow-visible px-1">
+                  <div className="w-full block overflow-visible px-1 max-w-full">
                     <PayPalButtons
                       style={{ layout: "vertical", color: "black", shape: "rect", label: "pay" }}
                       createOrder={(_, actions) => {
@@ -564,19 +555,19 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
             )}
           </>
         ) : (
-          <div className="text-center py-8 max-w-md mx-auto animate-fadeIn">
-            <span className="text-5xl">⚡</span>
-            <h3 className="font-display text-2xl font-semibold mt-4 text-purple-400 tracking-tight">
+          <div className="text-center py-6 sm:py-8 max-w-md mx-auto animate-fadeIn w-full">
+            <span className="text-4xl sm:text-5xl block">⚡</span>
+            <h3 className="font-display text-xl sm:text-2xl font-semibold mt-4 text-purple-400 tracking-tight break-words">
               {isOwnerMode ? "Extraction Complete!" : "Pipeline Dispatched Instantly!"}
             </h3>
-            <p className="text-sm text-zinc-400 mt-2 leading-relaxed">
+            <p className="text-xs sm:text-sm text-zinc-400 mt-2 leading-relaxed break-words">
               {isOwnerMode
                 ? `The compiled CSV dataset for ${formData.niche} has been automatically downloaded to your local drive.`
                 : `Success! Your specialized dataset containing verified B2B leads has been unlocked and downloaded directly inside your browser. Concurrently, a secure link and backup copy have been dispatched to ${formData.email} via Brevo.`}
             </p>
             <button
               onClick={onClose}
-              className="mt-8 w-full bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 rounded-xl py-3 text-sm font-semibold transition-all"
+              className="mt-6 sm:mt-8 w-full bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 rounded-xl py-3 text-sm font-semibold transition-all text-center"
             >
               Return to Operator Dashboard
             </button>
@@ -584,14 +575,14 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
         )}
 
         {loading && (
-          <div className="absolute inset-0 bg-black/95 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center p-6 text-center z-50 animate-fadeIn">
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center p-4 sm:p-6 text-center z-50 animate-fadeIn">
             <div className="h-6 w-6 rounded-full border-2 border-t-purple-500 border-r-transparent border-b-transparent border-l-transparent animate-spin mb-4" />
-            <div className="text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse">
+            <div className="text-[11px] sm:text-xs uppercase tracking-widest text-purple-400 font-medium animate-pulse max-w-full px-2 break-words">
               {loadingStatusText}
             </div>
 
             {progress > 0 && (
-              <div className="w-48 bg-zinc-900 h-1.5 rounded-full mt-4 overflow-hidden border border-zinc-800">
+              <div className="w-40 sm:w-48 bg-zinc-900 h-1.5 rounded-full mt-4 overflow-hidden border border-zinc-800">
                 <div
                   className="bg-purple-500 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
@@ -599,7 +590,7 @@ export function RequirementsModal({ plan, onClose }: RequirementsModalProps) {
               </div>
             )}
 
-            <p className="text-xs text-zinc-500 max-w-xs mt-3">
+            <p className="text-[10px] sm:text-xs text-zinc-500 max-w-xs mt-3 leading-relaxed px-2">
               Bypassing noise filters. Compiling specialized rows asynchronously to eliminate
               client-side connection timeouts.
             </p>
