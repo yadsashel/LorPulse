@@ -199,12 +199,13 @@ export default function App() {
                   features={[
                     "One-time absolute buyout ($10.00 total — not a subscription)",
                     "Includes full 5,000 data extraction runtime credits pool",
+                    "High-Efficiency Engine Deployment: Exactly 500 verified, high-efficiency leads generated per single scan execution.",
                     "Fixed calibration matrix: exactly 1 credit consumed per 10 premium leads",
                     "Target any local city, industrial node, or global enterprise vertical",
                     "Continuous live crawler deduplication & intense deep-ping confirmation",
                     "Instant browser CSV injection unlock + secure Brevo email sync backup",
                   ]}
-                  warningSentence="💡 Note on Purity: For ultra-narrow hyper-niches or tightly confined geographic sectors, our nodes prioritize mathematical accuracy over fake, bloated lists. Extremely micro-targeted queries might naturally yield concise, hyper-focused pools (e.g., 200–300 pristine contacts), ensuring you reach elite targets without paying for useless junk."
+                  warningSentence="💡 Note on Purity: For ultra-narrow hyper-niches or tightly confined geographic sectors, our nodes prioritize mathematical accuracy over fake, bloated lists. Extremely micro-targeted queries might naturally yield concise, hyper-focused pools (e.g., 200–300 pristine contacts), ensuring you reach elite targets without paying for useless junk. Our Risk-Free Lead Compensation Guarantee: While our multi-layered ping confirmation filters out the noise, modern web infrastructure occasionally caches dead local anchors (e.g., -45.s.local@...). Don't stress. If your generated batch contains corrupted, faked, or poorly-scraped rows, we provide full, direct compensation. Simply drop us a line through our Contact Form, and our engineering support will instantly credit your pipeline with pristine replacements. No questions asked."
                   ctaLabel="LAUNCH LIVE SCAN — UNLOCK 5,000 CREDITS"
                   onClick={() => setModal("core")}
                 />
