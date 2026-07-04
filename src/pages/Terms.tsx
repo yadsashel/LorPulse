@@ -22,7 +22,7 @@ export default function Terms() {
           <Section title="9. Limitation of Liability"><p>To the maximum extent permitted by law, LorPulse's aggregate liability under these Terms shall not exceed the fees paid by the customer in the twelve (12) months preceding the claim.</p></Section>
           <Section title="10. Termination"><p>We may suspend or terminate access for breach of these Terms, abuse of the Service, or unlawful use of delivered data.</p></Section>
           <Section title="11. Governing Law"><p>These Terms are governed by the laws of the State of Delaware, USA.</p></Section>
-          <Section title="12. Contact"><p>Questions? <a href="mailto:legal@lorpulse.com" className="underline">legal@lorpulse.com</a></p></Section>
+          <Section title="12. Contact"><p>Questions? <a href="mailto:lorpulse.official@gmail.com" className="underline">lorpulse.official@gmail.com</a></p></Section>
         </div>
       </article>
     </SiteShell>

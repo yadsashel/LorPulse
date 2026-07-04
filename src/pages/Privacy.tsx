@@ -17,10 +17,10 @@ export default function Privacy() {
           <Section title="4. Sources"><p>Data is sourced from: (a) publicly indexed web pages, (b) licensed third-party enrichment providers, (c) public regulatory filings, (d) customer-submitted seed lists.</p></Section>
           <Section title="5. How Data Is Used"><p>Collected data is used to assemble niche-targeted, intent-scored datasets delivered to verified business customers under contract.</p></Section>
           <Section title="6. Retention"><p>Records are refreshed on rolling 90-day cycles. Stale or unverifiable contacts are purged.</p></Section>
-          <Section title="7. Your Rights"><p>Data subjects may request access, correction, deletion, or restriction of processing by writing to <a href="mailto:privacy@lorpulse.com" className="underline">privacy@lorpulse.com</a>. Verified requests are honored within 30 days.</p></Section>
+          <Section title="7. Your Rights"><p>Data subjects may request access, correction, deletion, or restriction of processing by writing to <a href="mailto:lorpulse.official@gmail.com" className="underline">lorpulse.official@gmail.com</a>. Verified requests are honored within 30 days.</p></Section>
           <Section title="8. Security"><p>All datasets are encrypted in transit (TLS 1.3) and at rest (AES-256). Internal access is gated by SSO, MFA, and least-privilege role-based controls.</p></Section>
           <Section title="9. Third-Party Processors"><p>We use a limited set of sub-processors (cloud hosting, email delivery, payment processing). A current list is available on request.</p></Section>
-          <Section title="10. Contact"><p>Questions? Reach our Data Protection contact at <a href="mailto:privacy@lorpulse.com" className="underline">privacy@lorpulse.com</a>.</p></Section>
+          <Section title="10. Contact"><p>Questions? Reach our Data Protection contact at <a href="mailto:lorpulse.official@gmail.com" className="underline">lorpulse.official@gmail.com</a>.</p></Section>
         </div>
       </article>
     </SiteShell>
